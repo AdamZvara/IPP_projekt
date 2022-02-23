@@ -1,71 +1,27 @@
 <?php
 ini_set('display_errors', 'stderr');
 
-$help_message = "this will be printed out help message";
+$help_message = "USAGE: php parse.php [OPT]\n" .
+                "Parse IPPcode22 source code from standard " .
+                "input into XML format which is printed to\n" .
+                "standard output\n\n" .
+                "OPTIONS:\n  --help\tprint out this message";
+
 
 # Getting arguments from command line
-$longopt = array(
-    "help",
-    "stats:",
-    "loc",
-    "comments",
-    "labels",
-    "jumps",
-    "fwjumps",
-    "backjumps",
-    "badjumps");
+$longopt = array("help",);
 
 $options = getopt("", $longopt);
-$stat_used = "";
 
 if (key_exists("help", $options)) {
-    if (count($options) > 1) {
-        fprintf(STDERR, "Help option used with another option" . PHP_EOL);
+    # help with any other option
+    if ($argc > 2) {
+        fprintf(STDERR, 'help used with another param' . PHP_EOL);
         exit(10);
     }
+
     echo $help_message . PHP_EOL;
-} else {
-    $stats_defined = false;
-    foreach ($options as $key => $value) {
-        if ($key == "stats") {
-            $stats_defined = true;
-        } else {
-            if ($stats_defined == false) {
-                fprintf(STDERR, "Stats parameter used without specified file" . PHP_EOL);
-                exit(10);
-            } else if ($stat_used != "") {
-                fprintf(STDERR, "Multiple stats parameters used" . PHP_EOL);
-                exit(12);
-            } else {
-                switch ($key)
-                {
-                    case "loc":
-                        $stat_used = "loc";
-                        break;
-                    case "comments":
-                        $stat_used = "comments";
-                        break;
-                    case "labels":
-                        $stat_used = "labels";
-                        break;
-                    case "jumps":
-                        $stat_used = "jumps";
-                        break;
-                    case "fwjumps":
-                        $stat_used = "fwjumps";
-                        break;
-                    case "backjumps":
-                        $stat_used = "backjumps";
-                        break;
-                    case "badjumps":
-                        $stat_used = "badjumps";
-                        break;
-                    default:
-                        break;
-                }
-            }
-        }
-    }
+    exit(0);
 }
 
 # Create xml file
@@ -104,20 +60,20 @@ while ($line = fgets(STDIN)) {
     }
 }
 
-const VAR_FRAME_R = '(LF|GF|TF)@';
-const VAR_IDENT_R = '[_\-$&%*!?a-zA-Z][_\-$&%*!?a-zA-Z0-9]*';
-const VAR_R = '/^'.VAR_FRAME_R.VAR_IDENT_R.'$/';
-const TYPE_R = '/^(int|string|bool)$/';
-const BOOL_R = '/^bool@(true|false)$/';
-const INT_R  = '/^int@[-|+]?[0-9]+$/';
-const STRING_R = '/^string@([^\\\]|\\\[0-9][0-9][0-9])*$/';
-const NIL_R = '/^nil@nil$/';
-
 class Instruction
 {
     private static $order = 0;
     private $opcode;
     private $arg_counter = 1;
+
+    const VAR_FRAME_R = '(LF|GF|TF)@';
+    const VAR_IDENT_R = '[_\-$&%*!?a-zA-Z][_\-$&%*!?a-zA-Z0-9]*';
+    const VAR_R = '/^'. self::VAR_FRAME_R . self::VAR_IDENT_R.'$/';
+    const TYPE_R = '/^(int|string|bool)$/';
+    const BOOL_R = '/^bool@(true|false)$/';
+    const INT_R  = '/^int@[-|+]?[0-9]+$/';
+    const STRING_R = '/^string@([^\\\]|\\\[0-9][0-9][0-9])*$/';
+    const NIL_R = '/^nil@nil$/';
 
     function __construct($opcode)
     {
@@ -127,32 +83,28 @@ class Instruction
 
     private function var_match($arg)
     {
-        if (!preg_match(VAR_R, $arg)) {
+        if (!preg_match(self::VAR_R, $arg))
             exit(23);
-        }
     }
 
     private function symb_match($arg)
     {
-        if (!preg_match(BOOL_R, $arg)   && !preg_match(INT_R, $arg) &&
-            !preg_match(STRING_R, $arg) && !preg_match(NIL_R, $arg) &&
-            !preg_match(VAR_R, $arg)) {
+        if (!preg_match(self::BOOL_R, $arg)   && !preg_match(self::INT_R, $arg) &&
+            !preg_match(self::STRING_R, $arg) && !preg_match(self::NIL_R, $arg) &&
+            !preg_match(self::VAR_R, $arg))
             exit(23);
-        }
     }
 
     private function label_match($arg)
     {
-        if (!preg_match('/^' . VAR_IDENT_R . '$/', $arg)) {
+        if (!preg_match('/^' . self::VAR_IDENT_R . '$/', $arg))
             exit(23);
-        }
     }
 
     private function type_match($arg)
     {
-        if (!preg_match(TYPE_R, $arg)) {
+        if (!preg_match(self::TYPE_R, $arg))
             exit(23);
-        }
     }
 
     public function write_start($xml)
@@ -193,9 +145,8 @@ class Instruction
     public function write_arguments($xml, $arg, $arg_types)
     {
         # check number of arguments
-        if (count($arg) != count($arg_types)) {
+        if (count($arg) != count($arg_types))
             exit(23);
-        }
 
         foreach($arg_types as $value => $type) {
             $xml->startElement('arg' . $this->arg_counter);
@@ -236,17 +187,14 @@ class Instruction
 }
 
 # parsing actual source file
-while (FALSE !== ($line = fgets(STDIN))) {
-    # remove potential comments from line
-    if (($comment_start = strpos($line, '#')) !== false) {
-        $line = substr_replace($line, '', $comment_start);
-        if (strlen($line) == 0) {
-            continue;
-        }
-    }
-
-    # separate into array based on whitespaces
+while ($line = fgets(STDIN)) {
+    # remove potential comments from line and strip whitespaces
+    $line = strip_comment($line);
     $line = trim($line);
+    if (strlen($line) == 0)
+        continue;
+
+        # separate into array based on whitespaces
     $tokens = preg_split('/\s+/', $line);
 
     # create separate variables for instruction and arguments
@@ -259,78 +207,76 @@ while (FALSE !== ($line = fgets(STDIN))) {
     switch ($instr) {
         # INSTR
         case 'CREATEFRAME':
-        case 'PUSHFRAME':
-        case 'POPFRAME':
-        case 'RETURN':
-        case 'BREAK':
-            $instr_obj->write_arguments($xml, $arguments, array());
+        case 'PUSHFRAME'  :
+        case 'POPFRAME'   :
+        case 'RETURN'     :
+        case 'BREAK'      :
+            $arg_types = array();
             break;
 
         # INSTR var
         case 'DEFVAR':
-        case 'POPS':
-            $instr_obj->write_arguments($xml, $arguments, array('var'));
+        case 'POPS'  :
+            $arg_types = array('var');
             break;
 
         # INSTR symb
         case 'DPRINT':
-        case 'EXIT':
-        case 'WRITE':
-        case 'PUSHS':
-            $instr_obj->write_arguments($xml, $arguments, array('symb'));
+        case 'EXIT'  :
+        case 'WRITE' :
+        case 'PUSHS' :
+            $arg_types = array('symb');
             break;
 
         # INSTR label
         case 'LABEL':
-        case 'JUMP':
-        case 'CALL':
-            $instr_obj->write_arguments($xml, $arguments, array('label'));
+        case 'JUMP' :
+        case 'CALL' :
+            $arg_types = array('label');
             break;
 
         # INSTR var type
         case 'READ':
-            $instr_obj->write_arguments($xml, $arguments, array('var', 'type'));
+            $arg_types = array('var', 'type');
             break;
 
         # INSTR var symbol
-        case 'MOVE':
+        case 'MOVE'    :
         case 'INT2CHAR':
-        case 'STRLEN':
-        case 'TYPE':
-            $instr_obj->write_arguments($xml, $arguments, array('var', 'symb'));
+        case 'STRLEN'  :
+        case 'TYPE'    :
+        case 'NOT'     :
+            $arg_types = array('var', 'symb');
             break;
 
         # INSTR label symb symb
-        case 'JUMPIFEQ':
+        case 'JUMPIFEQ' :
         case 'JUMPIFNEQ':
-            $arg = array('label', 'symb', 'symb');
-            $instr_obj->write_arguments($xml, $arguments, $arg);
+            $arg_types = array('label', 'symb', 'symb');
             break;
 
         # INSTR var symb symb
-        case 'ADD'  :
-        case 'SUB'  :
-        case 'MUL'  :
-        case 'DIV'  :
-        case 'LT'   :
-        case 'GT'   :
-        case 'EQ'   :
-        case 'END'  :
-        case 'OR'   :
-        case 'NOT'  :
-        case 'STR2INT'  :
-        case 'CONCAT'   :
-        case 'GETCHAR'  :
-        case 'SETCHAR'  :
-            $arg = array('var', 'symb', 'symb');
-            $instr_obj->write_arguments($xml, $arguments, $arg);
+        case 'ADD'    :
+        case 'SUB'    :
+        case 'MUL'    :
+        case 'IDIV'    :
+        case 'LT'     :
+        case 'GT'     :
+        case 'EQ'     :
+        case 'AND'    :
+        case 'OR'     :
+        case 'STRI2INT':
+        case 'CONCAT' :
+        case 'GETCHAR':
+        case 'SETCHAR':
+            $arg_types = array('var', 'symb', 'symb');
             break;
 
         default:
             exit(22);
-            break;
     }
 
+    $instr_obj->write_arguments($xml, $arguments, $arg_types);
     $instr_obj->write_end($xml);
 }
 
@@ -338,4 +284,3 @@ $xml->endElement(); #program element
 $xml->endDocument();
 echo $xml->outputMemory();
 ?>
-
