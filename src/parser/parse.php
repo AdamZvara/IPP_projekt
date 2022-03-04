@@ -15,7 +15,6 @@ $options = getopt("", $longopt);
 if (key_exists("help", $options)) {
     # help with any other option
     if ($argc > 2) {
-        fprintf(STDERR, 'help used with another param' . PHP_EOL);
         exit(E_WRONGARG);
     }
     echo $help_message . PHP_EOL;

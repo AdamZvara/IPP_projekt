@@ -98,6 +98,44 @@ function interpret_test()
     done
 }
 
+PARSER_BONUS="$TESTS/parser_bonus"
+
+function parser_bonus()
+{
+    echo -e "${ORANGE}PARSER-BONUS${NC}"
+
+    for TEST_NAME in $(ls $PARSER_BONUS | grep ".run")
+        do
+            TEST_COUNT+=1
+            TEST_NAME=${TEST_NAME%.*}
+            echo -e -n "\t${BLUE}$TEST_NAME:${NC}"
+
+            arguments="$PARSER_BONUS/$TEST_NAME.run"
+            php8.1 parser/parse.php $(cat $arguments) > tmp
+
+            RETVAL=$?
+            RETVAL_EXPECTED=$(cat "$PARSER_BONUS/$TEST_NAME.rc")
+
+            # check if return codes match
+            if [ $RETVAL != $RETVAL_EXPECTED ]; then
+                echo -e " ${RED}FAILED${NC}"
+            else
+                if [ $RETVAL != 0 ]; then
+                    # error occured, no need to check output
+                    TEST_PASSED+=1
+                    echo -e " ${GREEN}PASSED${NC}"
+                else
+                    diff "$PARSER_BONUS/$TEST_NAME.out" tmp -E -B >/dev/null
+                    if [ $? -eq 0 ]; then
+                        TEST_PASSED+=1
+                        echo -e " ${GREEN}PASSED${NC}"
+                    else
+                        echo -e " ${RED}FAILED${NC}"
+                    fi
+                fi
+            fi
+        done
+}
 
 if [ -z $1 ]; then
     parser_test
@@ -106,6 +144,8 @@ elif [ $1 == 'parser' ]; then
     parser_test
 elif [ $1 == 'interpret' ]; then
     interpret_test
+elif [ $1 == 'pbonus' ]; then
+    parser_bonus
 fi
 
 echo "Passed" $TEST_PASSED "tests out of" $TEST_COUNT
