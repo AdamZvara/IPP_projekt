@@ -13,7 +13,7 @@ class Instruction
     const VAR_IDENT_R = '[_\-$&%*!?a-zA-Z][_\-$&%*!?a-zA-Z0-9]*';
     const VAR_R = '/^'. self::VAR_FRAME_R . self::VAR_IDENT_R.'$/';
     const TYPE_R = '/^(int|string|bool)$/';
-    const BOOL_R = '/^bool@(true|false)$/i';
+    const BOOL_R = '/^bool@(?i:true|false)$/';
     const INT_R  = '/^int@[-|+]?[0-9]+$/';
     const STRING_R = '/^string@([^\\\]|\\\[0-9][0-9][0-9])*$/';
     const NIL_R = '/^nil@nil$/';
