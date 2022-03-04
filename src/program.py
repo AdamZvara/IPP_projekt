@@ -7,15 +7,23 @@ class Argument:
         self.type = argument.attrib['type']
         if self.type == 'int':
             self.value = self.__to_int__(argument.text)
+        elif self.type == 'float':
+            self.value = self.__to_float__(argument.text)
         else:
             self.value = argument.text
-        self.order = int(argument.tag[3:])
+        self.order = int(argument.tag[3:]) # for ordering arguments within instruction
 
     def __to_int__(self, value):
         try:
             return int(value)
         except ValueError:
-            exit(53)
+            exit(32)
+
+    def __to_float__(self, value):
+        try:
+            return float.fromhex(value)
+        except ValueError:
+            exit(32)
 
     def __eq__(self, other) -> bool:
         if (self.type != 'nil' and other.type != 'nil'):
@@ -120,6 +128,7 @@ class Program:
     __instructions_pos = 0
     labels = list()
     call_stack = list()
+    stack = list()
 
     def __init__(self):
         pass
@@ -172,11 +181,21 @@ class Program:
 
     def jump(self, label : Argument):
         if not (label := self.label_find(label.value)):
-            exit(56)
+            exit(52)
         self.__instructions_pos = label.get_pos()
 
-    def add(self, op1 : Argument, op2 : Argument) -> int:
-        pass
+    def call(self, label : Argument):
+        self.call_stack.append(self.__instructions_pos)
+        self.jump(label)
+
+    def return_function(self):
+        self.__instructions_pos = self.call_stack.pop()
+
+    def pushs(self, arg : Argument) -> None:
+        if (arg.type == 'var'):
+            self.stack.append(arg)
+        
+
 
     ####################### DELETE LATER #######################
     def __str__(self):

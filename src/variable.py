@@ -1,12 +1,15 @@
 # Class for storing variables of interpreted program
 # Frame (GF/LF/TF), name and value are stored for each variable
 from program import Argument
+from sys import stderr
+import re
 
 class Variable():
     def __init__(self, whole_name : str) -> None:
         self.__frame = whole_name[:2]   # GF/TF/LF without @
         self.__name = whole_name[3:]    # actual name of variable
         self.__value = None
+        self.__type = ''
 
     def get_frame(self) -> str:
         return self.__frame
@@ -19,6 +22,12 @@ class Variable():
 
     def set_value(self, value : any) -> None:
         self.__value = value
+
+    def set_type(self, type : str) -> None:
+        self.__type = type
+
+    def get_type(self) -> str:
+        return self.__type
 
     def TF_to_LF(self) -> None:
         self.__frame = 'LF'
@@ -59,9 +68,16 @@ class Variable_manager():
         return None
 
     # Insert value into variable, if variable exists
-    def insert_value(self, dest : Argument, value : any) -> None:
+    def insert_value(self, dest : Argument, value : any, type : str) -> None:
         if var := self.find(dest.value):
             var.set_value(value)
+            var.set_type(type)
+        else:
+            exit(54)
+
+    def get_type(self, var_name : str):
+        if var := self.find(var_name):
+            return var.get_type()
         else:
             exit(54)
 
@@ -71,14 +87,42 @@ class Variable_manager():
         else:
             exit(54)
 
+    def escape_sequences(self, string : str):
+        escape_re = "\\\\[0-9][0-9][0-9]"
+        matches = re.search(escape_re, string)
+        if matches != None:
+            for escape in matches.regs:
+                escaped = chr(int(string[escape[0]+1:escape[1]]))
+                string = re.sub(escape_re, escaped, string)
+        return string
+
     # Print out value of given variable
     def print(self, arg : Argument) -> None:
         if (arg.type == 'var'):
             if not (var := self.find(arg.value)):
                 exit(54)
-            print(var.get_value(), end='')
+            if var.get_type() == 'string':
+                result = self.escape_sequences(str(var.get_value()))
+            elif var.get_type() == 'float':
+                result = float.hex(var.get_value())
+            else:
+                result = var.get_value()
         else:
-            print(arg.value, end='')
+            if (arg.type == 'string'):
+                result = self.escape_sequences(str(arg.value))
+            elif (arg.type == 'float'):
+                result = float.hex(arg.value)
+            else:
+                result = arg.value
+        print(result, end='')
+
+    def dprint(self, arg : Argument) -> None:
+        if (arg.type == 'var'):
+            if not (var := self.find(arg.value)):
+                exit(54)
+            print(var.get_value(), end='', file=stderr)
+        else:
+            print(arg.value, end='', file=stderr)
 
     # Empty temporary frame (if it exists) and create new one
     def TF_create(self):
@@ -110,3 +154,16 @@ class Variable_manager():
         for arg in self.__frames['LF']:
             arg.LF_to_TF()
         self.__temp_frame_active = True
+
+    def exit(self, arg : Argument) -> None:
+        if (arg.type == 'var'):
+            if not (var := self.find(arg.value)):
+                exit(54)
+            value = var.get_value()
+        else:
+            value = arg.value
+        if value < 0 or value > 49:
+                exit(57)
+        exit(value)
+
+

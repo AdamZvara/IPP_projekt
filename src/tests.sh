@@ -27,19 +27,20 @@ function parser_test()
         do
             TEST_COUNT+=1
             TEST_NAME=${TEST_NAME%.*}
-            echo -e -n "\t${BLUE}$TEST_NAME:${NC}"
+            #echo -e -n "\t${BLUE}$TEST_NAME:${NC}"
 
-            php8.1 parse.php < "$PARSE_TESTS/$DIR/$TEST_NAME.src" > tmp
+            php8.1 parser/parse.php < "$PARSE_TESTS/$DIR/$TEST_NAME.src" > tmp
             RETVAL=$?
             RETVAL_EXPECTED=$(cat "$PARSE_TESTS/$DIR/$TEST_NAME.rc")
 
             # check if return codes match
             if [ $RETVAL != $RETVAL_EXPECTED ]; then
+                echo -e -n "\t${BLUE}$TEST_NAME:${NC}"
                 echo -e " ${RED}FAILED${NC}"
             else
                 if [ $RETVAL != 0 ]; then
                     # error occured, no need to do XML_DIFF
-                    echo -e " ${GREEN}PASSED${NC}"
+                    #echo -e " ${GREEN}PASSED${NC}"
                     TEST_PASSED+=1
                 else
                     # no error occured, do XML_DIFF
@@ -47,8 +48,9 @@ function parser_test()
                     java -jar $JEXAMXML_PATH tmp $XML_EXP $JEXAMXML_OPT_PATH/options>/dev/null
                     if [ $? -eq 0 ]; then
                         TEST_PASSED+=1
-                        echo -e " ${GREEN}PASSED${NC}"
+                        #echo -e " ${GREEN}PASSED${NC}"
                     else
+                        echo -e -n "\t${BLUE}$TEST_NAME:${NC}"
                         echo -e " ${RED}FAILED${NC}"
                     fi
                 fi
@@ -67,28 +69,34 @@ function interpret_test()
         do
             TEST_COUNT+=1
             TEST_NAME=${TEST_NAME%.*}
-            echo -e -n "\t${BLUE}$TEST_NAME:${NC}"
+            #echo -e -n "\t${BLUE}$TEST_NAME:${NC}"
 
             src=$INTERPRET_TESTS/$DIR/$TEST_NAME'.src'
             input=$INTERPRET_TESTS/$DIR/$TEST_NAME'.in'
-            python3 interpret.py --source=$src --input=$input > tmp
+            if [ -f $input ]; then
+                python3 interpret.py --source=$src --input=$input > tmp 2>/dev/null
+            else
+                python3 interpret.py --source=$src > tmp
+            fi
             RETVAL=$?
             RETVAL_EXPECTED=$(cat "$INTERPRET_TESTS/$DIR/$TEST_NAME.rc")
 
             # check if return codes match
             if [ $RETVAL != $RETVAL_EXPECTED ]; then
+                echo -e -n "\t${BLUE}$TEST_NAME:${NC}"
                 echo -e " ${RED}FAILED${NC}"
             else
                 if [ $RETVAL != 0 ]; then
                     # error occured, no need to check output
                     TEST_PASSED+=1
-                    echo -e " ${GREEN}PASSED${NC}"
+                    #echo -e " ${GREEN}PASSED${NC}"
                 else
                     diff $INTERPRET_TESTS/$DIR/$TEST_NAME.'out' tmp >/dev/null
                     if [ $? -eq 0 ]; then
-                       TEST_PASSED+=1
-                        echo -e " ${GREEN}PASSED${NC}"
+                        TEST_PASSED+=1
+                        #echo -e " ${GREEN}PASSED${NC}"
                     else
+                        echo -e -n "\t${BLUE}$TEST_NAME:${NC}"
                         echo -e " ${RED}FAILED${NC}"
                     fi
                 fi
