@@ -4,9 +4,9 @@ include 'error_codes.php';
 # class representing single instruction, which is being parsed
 class Instruction
 {
-    private static $order = 0;
-    private $opcode;
-    private $arg_counter = 1; # starts at one because XML attribues 'argX' start at one
+    private static $_order = 0;
+    private $_opcode;
+    private $_arg_counter = 1; # starts at one because XML attribues 'argX' start at one
 
     # REGEXes to match arguments
     const VAR_FRAME_R = '(LF|GF|TF)@';
@@ -21,16 +21,16 @@ class Instruction
     function __construct($opcode)
     {
         # for every new instruction increase order by one for the whole class
-        self::$order++;
-        $this->opcode = $opcode;
+        self::$_order++;
+        $this->_opcode = $opcode;
     }
 
     # start writing instruction element with attributes order and opcode
     public function start_element($xml)
     {
         $xml->startElement('instruction');
-        $xml->writeAttribute('order', self::$order);
-        $xml->writeAttribute('opcode', $this->opcode);
+        $xml->writeAttribute('order', self::$_order);
+        $xml->writeAttribute('opcode', $this->_opcode);
     }
 
     # end currently opened element
@@ -101,8 +101,8 @@ class Instruction
             exit(E_OTHER);
 
         foreach($arg_types as $value => $type) {
-            $xml->startElement('arg' . $this->arg_counter);
-            $curr_arg = $arg[$this->arg_counter-1];
+            $xml->startElement('arg' . $this->_arg_counter);
+            $curr_arg = $arg[$this->_arg_counter-1];
             switch ($type) {
                 case 'symb':
                     $this->symb_match($curr_arg);
@@ -128,7 +128,7 @@ class Instruction
             }
 
             $xml->endElement();
-            $this->arg_counter++;
+            $this->_arg_counter++;
         }
     }
 }
