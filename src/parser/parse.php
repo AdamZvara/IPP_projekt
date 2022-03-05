@@ -1,5 +1,6 @@
 <?php
 include 'error_codes.php';
+include 'statistics.php';
 
 ini_set('display_errors', 'stderr');
 $help_message = "USAGE: php parse.php [OPT]\n" .
@@ -21,6 +22,8 @@ if (key_exists("help", $options)) {
     exit(0);
 }
 
+$stat = new Statistics();
+
 # create xml file using XMLWriter class, set indent and encoding
 $xml = new XMLWriter();
 $xml->openMemory();
@@ -31,9 +34,11 @@ $xml->startDocument('1.0', 'UTF-8');
 # find comment in line, remove it and get rid of whitespaces
 function strip_comment($line)
 {
+    global $stat;
     $comment_start = strpos($line, '#');
     if ($comment_start !== false) {
         $line = substr_replace($line, '', $comment_start);
+        $stat->add_comment();
     }
 
     return trim($line);
@@ -70,6 +75,7 @@ while ($line = fgets(STDIN)) {
     if (strlen($line) == 0)
         continue;
 
+    $stat->add_loc();
     $tokens = preg_split('/\s+/', $line);
 
     # extract instruction and arguments from line
@@ -153,6 +159,16 @@ while ($line = fgets(STDIN)) {
 
     $instr_obj->write_arguments($xml, $arguments, $arg_types);
     $instr_obj->end_element($xml);
+
+    # label into statistics
+    $jumpinstr = array('CALL' => 1, 'RETURN' => 1, 'JUMP' => 1, 'JUMPIFEQ' => 1, 'JUMPIFNEQ' => 1);
+    if ($instr == 'LABEL') {
+        $stat->add_label($arguments[0], $stat->get_loc());
+    } elseif (array_key_exists($instr, $jumpinstr)) {
+        if ($arguments) { # array is not empty
+            $stat->add_jump($arguments[0], $stat->get_loc());
+        }
+    }
 }
 
 $xml->endElement(); # Root program element
