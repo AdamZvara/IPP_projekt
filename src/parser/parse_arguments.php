@@ -7,7 +7,16 @@ const HELP_MESSAGE = "USAGE: php parse.php [OPT]\n" .
                      "Parse IPPcode22 source code from standard " .
                      "input into XML format which is printed to\n" .
                      "standard output\n\n" .
-                     "OPTIONS:\n  --help\tprint out this message";
+                     "OPTIONS:\n  --help\t print out this message\n" .
+                     "  --stats=file\t set file for saving group statistics\n" .
+                     "  STATISTIC OPTIONS:\n" .
+                     "    --loc\t lines of code\n" .
+                     "    --comments\t lines including comments\n" .
+                     "    --labels\t lines with LABEL instruction\n" .
+                     "    --jumps\t lines from JUMP FAMILY instructions\n" .
+                     "    --fwjumps\t JUMP FAMILY instructions which jump to LABEL after currently processed instruction\n" .
+                     "    --backjumps\t JUMP FAMILY instructions which jump to LABEL before currently processed instruction\n" .
+                     "    --badjumps\t JUMP FAMILY instructions which jump to undefined LABEL";
 
 define('HELP',      "--help");
 define('STATS',     "--stats");

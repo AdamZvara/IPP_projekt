@@ -31,7 +31,6 @@ function strip_comment($line)
 
 $stat = new Statistics();
 
-
 # look for header (.IPPCODE22)
 while ($line = fgets(STDIN)) {
     $line = strip_comment($line);

@@ -115,7 +115,7 @@ function parser_bonus()
                 valid=$(echo $TEST_NAME | grep valid)
                 empty=$(echo $TEST_NAME | grep empty)
                 if [ $valid ]; then
-                    php8.1 parser/parse.php $line < "$PARSER_BONUS/$TEST_NAME.in"
+                    php8.1 parser/parse.php $line < "$PARSER_BONUS/$TEST_NAME.in" >/dev/null
                 else
                     php8.1 parser/parse.php $line > tmp
                 fi
