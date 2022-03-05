@@ -161,5 +161,5 @@ $bonus_handler->write($stat);
 
 $xml->endElement(); # Root program element
 $xml->endDocument();
-#echo $xml->outputMemory();
+echo $xml->outputMemory();
 ?>
