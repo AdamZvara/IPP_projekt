@@ -1,28 +1,11 @@
 <?php
-include 'error_codes.php';
-include 'statistics.php';
+include 'error_codes.php';      # error codes declarations
+include 'parse_arguments.php';  # parsing arguments
 
 ini_set('display_errors', 'stderr');
-$help_message = "USAGE: php parse.php [OPT]\n" .
-                "Parse IPPcode22 source code from standard " .
-                "input into XML format which is printed to\n" .
-                "standard output\n\n" .
-                "OPTIONS:\n  --help\tprint out this message";
 
-# get arguments from command line
-$longopt = array("help",);
-$options = getopt("", $longopt);
-
-if (key_exists("help", $options)) {
-    # help with any other option
-    if ($argc > 2) {
-        exit(E_WRONGARG);
-    }
-    echo $help_message . PHP_EOL;
-    exit(0);
-}
-
-$stat = new Statistics();
+$bonus_handler = new Bonus_arg_handler($argc, $argv);
+$bonus_handler->parse_args();
 
 # create xml file using XMLWriter class, set indent and encoding
 $xml = new XMLWriter();
@@ -67,7 +50,10 @@ while ($line = fgets(STDIN)) {
     }
 }
 
-include 'instruction.php';
+include 'instruction.php';  # class for instruction parsing
+#class statistics in included from parse_arguments
+
+$stat = new Statistics();
 
 # parsing actual source file
 while ($line = fgets(STDIN)) {
@@ -171,7 +157,10 @@ while ($line = fgets(STDIN)) {
     }
 }
 
+$stat->calculate_fbjumps();
+$bonus_handler->write($stat);
+
 $xml->endElement(); # Root program element
 $xml->endDocument();
-echo $xml->outputMemory();
+#echo $xml->outputMemory();
 ?>
