@@ -113,6 +113,7 @@ function parser_bonus()
                 TEST_NAME=${TEST_NAME%.*}
 
                 valid=$(echo $TEST_NAME | grep valid)
+                empty=$(echo $TEST_NAME | grep empty)
                 if [ $valid ]; then
                     php8.1 parser/parse.php $line < "$PARSER_BONUS/$TEST_NAME.in"
                 else
@@ -131,7 +132,16 @@ function parser_bonus()
                         TEST_PASSED+=1
                         echo -e " ${GREEN}PASSED${NC}"
                     else
-                        if [ $valid == 'valid' ]; then
+                        if [ "$valid" = 'valid' ]; then
+                            diff "$PARSER_BONUS/$TEST_NAME.out" file -E -B >/dev/null
+                        elif [ "$valid" = 'valid2' ]; then
+                            diff "$PARSER_BONUS/$TEST_NAME.out1" file -E -B >/dev/null
+                            a=$?
+                            diff "$PARSER_BONUS/$TEST_NAME.out2" file2 -E -B >/dev/null
+                            b=$?
+                            [ $((a-b)) == 0 ]
+                        elif [ "$empty" ]; then
+                            touch file
                             diff "$PARSER_BONUS/$TEST_NAME.out" file -E -B >/dev/null
                         else
                             diff "$PARSER_BONUS/$TEST_NAME.out" tmp -E -B >/dev/null

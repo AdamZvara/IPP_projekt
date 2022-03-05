@@ -1,6 +1,8 @@
 <?php
 include 'error_codes.php';      # error codes declarations
 include 'parse_arguments.php';  # parsing arguments
+include 'instruction.php';  # class for instruction parsing
+#class statistics in included from parse_arguments
 
 ini_set('display_errors', 'stderr');
 
@@ -27,6 +29,9 @@ function strip_comment($line)
     return trim($line);
 }
 
+$stat = new Statistics();
+
+
 # look for header (.IPPCODE22)
 while ($line = fgets(STDIN)) {
     $line = strip_comment($line);
@@ -49,11 +54,6 @@ while ($line = fgets(STDIN)) {
         exit(E_HEADER);
     }
 }
-
-include 'instruction.php';  # class for instruction parsing
-#class statistics in included from parse_arguments
-
-$stat = new Statistics();
 
 # parsing actual source file
 while ($line = fgets(STDIN)) {
