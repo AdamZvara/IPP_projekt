@@ -106,34 +106,36 @@ function parser_bonus()
 
     for TEST_NAME in $(ls $PARSER_BONUS | grep ".run")
         do
-            TEST_COUNT+=1
-            TEST_NAME=${TEST_NAME%.*}
-            echo -e -n "\t${BLUE}$TEST_NAME:${NC}"
+            echo -e -n "\t${BLUE}$TEST_NAME:${NC}\n"
+            while read -r line; do
+                echo -e -n "\t\t$line:"
+                TEST_COUNT+=1
+                TEST_NAME=${TEST_NAME%.*}
 
-            arguments="$PARSER_BONUS/$TEST_NAME.run"
-            php8.1 parser/parse.php $(cat $arguments) > tmp
+                php8.1 parser/parse.php $line > tmp
 
-            RETVAL=$?
-            RETVAL_EXPECTED=$(cat "$PARSER_BONUS/$TEST_NAME.rc")
+                RETVAL=$?
+                RETVAL_EXPECTED=$(cat "$PARSER_BONUS/$TEST_NAME.rc")
 
-            # check if return codes match
-            if [ $RETVAL != $RETVAL_EXPECTED ]; then
-                echo -e " ${RED}FAILED${NC}"
-            else
-                if [ $RETVAL != 0 ]; then
-                    # error occured, no need to check output
-                    TEST_PASSED+=1
-                    echo -e " ${GREEN}PASSED${NC}"
+                # check if return codes match
+                if [ $RETVAL != $RETVAL_EXPECTED ]; then
+                    echo -e " ${RED}FAILED${NC}"
                 else
-                    diff "$PARSER_BONUS/$TEST_NAME.out" tmp -E -B >/dev/null
-                    if [ $? -eq 0 ]; then
+                    if [ $RETVAL != 0 ]; then
+                        # error occured, no need to check output
                         TEST_PASSED+=1
                         echo -e " ${GREEN}PASSED${NC}"
                     else
-                        echo -e " ${RED}FAILED${NC}"
+                        diff "$PARSER_BONUS/$TEST_NAME.out" tmp -E -B >/dev/null
+                        if [ $? -eq 0 ]; then
+                            TEST_PASSED+=1
+                            echo -e " ${GREEN}PASSED${NC}"
+                        else
+                            echo -e " ${RED}FAILED${NC}"
+                        fi
                     fi
                 fi
-            fi
+            done < "$PARSER_BONUS/$TEST_NAME";
         done
 }
 
