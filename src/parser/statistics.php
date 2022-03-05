@@ -35,16 +35,22 @@ class Statistics
     # get badjumps (subtract labels array from jump_targets)
     public function get_badjumps()
     {
-        return count(array_diff_key($this->_jump_targets, $this->_labels));
+        $badjumps = 0;
+        foreach (array_diff_key($this->_jump_targets, $this->_labels) as $label) {
+            $badjumps += count($label);
+        }
+        return $badjumps;
     }
 
-    # increace jump counter and add jump target into array
+    # increase jump counter and add jump target into array
     public function add_jump($target, $position)
     {
-        if (array_key_exists($target, $this->_jump_targets)) { # array of positions already exists
-            array_push($this->_jump_targets[$target], $position);
-        } else {
-            $this->_jump_targets[$target] = array('0' => $position);
+        if ($target) { # RETURN does not have a target
+            if (array_key_exists($target, $this->_jump_targets)) { # array of positions already exists
+                array_push($this->_jump_targets[$target], $position);
+            } else {
+                $this->_jump_targets[$target] = array('0' => $position);
+            }
         }
         $this->_jumps += 1;
     }

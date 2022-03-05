@@ -112,7 +112,12 @@ function parser_bonus()
                 TEST_COUNT+=1
                 TEST_NAME=${TEST_NAME%.*}
 
-                php8.1 parser/parse.php $line > tmp
+                valid=$(echo $TEST_NAME | grep valid)
+                if [ $valid ]; then
+                    php8.1 parser/parse.php $line < "$PARSER_BONUS/$TEST_NAME.in"
+                else
+                    php8.1 parser/parse.php $line > tmp
+                fi
 
                 RETVAL=$?
                 RETVAL_EXPECTED=$(cat "$PARSER_BONUS/$TEST_NAME.rc")
@@ -126,7 +131,11 @@ function parser_bonus()
                         TEST_PASSED+=1
                         echo -e " ${GREEN}PASSED${NC}"
                     else
-                        diff "$PARSER_BONUS/$TEST_NAME.out" tmp -E -B >/dev/null
+                        if [ $valid == 'valid' ]; then
+                            diff "$PARSER_BONUS/$TEST_NAME.out" file -E -B >/dev/null
+                        else
+                            diff "$PARSER_BONUS/$TEST_NAME.out" tmp -E -B >/dev/null
+                        fi
                         if [ $? -eq 0 ]; then
                             TEST_PASSED+=1
                             echo -e " ${GREEN}PASSED${NC}"

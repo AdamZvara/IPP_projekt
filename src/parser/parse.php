@@ -151,9 +151,8 @@ while ($line = fgets(STDIN)) {
     if ($instr == 'LABEL') {
         $stat->add_label($arguments[0], $stat->get_loc());
     } elseif (array_key_exists($instr, $jumpinstr)) {
-        if ($arguments) { # array is not empty
-            $stat->add_jump($arguments[0], $stat->get_loc());
-        }
+        $target = count($arguments) ? $arguments[0] : 0;
+        $stat->add_jump($target, $stat->get_loc());
     }
 }
 
