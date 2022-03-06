@@ -1,7 +1,15 @@
 <?php
+/**
+ * @brief   Class instruction
+ * @date    6.3.2022
+ * @author  xzvara01, xzvara01@stud.fit.vutbr.cz
+ */
+
 include_once 'error_codes.php';
 
-# class representing single instruction, which is being parsed
+/*
+ * Class representing single instruction, which is being parsed
+ */
 class Instruction
 {
     private static $_order = 0;
@@ -34,10 +42,7 @@ class Instruction
     }
 
     # end currently opened element
-    public function end_element($xml)
-    {
-        $xml->endElement();
-    }
+    public function end_element($xml) { $xml->endElement(); }
 
     # try to match variable regex on argument
     private function var_match($arg)

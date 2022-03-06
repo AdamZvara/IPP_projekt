@@ -8,7 +8,7 @@
 include_once 'classes/error_codes.php';      # error codes declarations
 include_once 'classes/parse_arguments.php';  # class for parsing arguments
 include_once 'classes/instruction.php';      # class for instruction parsing
-include_once 'classes/statistics.php';       # class for bonus extention
+include_once 'classes/statistics.php';       # class for bonus extension
 
 ini_set('display_errors', 'stderr');
 
@@ -60,7 +60,7 @@ while ($line = fgets(STDIN)) {
     }
 }
 
-# parsing actual source file
+# continue parsing instructions
 while ($line = fgets(STDIN)) {
     $line = strip_comment($line);
     if (strlen($line) == 0)

@@ -1,4 +1,9 @@
 <?php
+/**
+ * @brief   Classes used for parsing arguments from user
+ * @date    6.3.2022
+ * @author  xzvara01, xzvara01@stud.fit.vutbr.cz
+ */
 
 include_once 'error_codes.php';
 include_once 'statistics.php';
@@ -17,7 +22,7 @@ const HELP_MESSAGE = "USAGE: php parse.php [OPT]\n" .
                      "    --fwjumps\t JUMP FAMILY instructions which jump to LABEL after currently processed instruction\n" .
                      "    --backjumps\t JUMP FAMILY instructions which jump to LABEL before currently processed instruction\n" .
                      "    --badjumps\t JUMP FAMILY instructions which jump to undefined LABEL";
-
+# possible options
 define('HELP',      "--help");
 define('STATS',     "--stats");
 define('LOC',       "--loc");
@@ -28,12 +33,15 @@ define('FWJUMPS',   "--fwjumps");
 define('BACKJUMPS', "--backjumps");
 define('BADJUMPS',  "--badjumps");
 
+/*
+ * Class used for storing statistic options used for each file
+ */
 class Stats_file
 {
     static private $_files_used = array();
     private $_filename;
     private $_file;
-    private $_stats = array();
+    private $_stats_used = array();
 
     # check if file was already used with --stats option and open given file
     function __construct($filename)
@@ -45,14 +53,13 @@ class Stats_file
         array_push( self::$_files_used, $filename);
     }
 
-    function add_stat($stat_name)
-    {
-        array_push($this->_stats, $stat_name);
-    }
+    # add statistic into _stats_used
+    function add_stat($stat_name) { array_push($this->_stats_used, $stat_name); }
 
+    # write statistics into _file based on _stats_used
     function write_stats($stat_obj)
     {
-        foreach ($this->_stats as $key => $stat) {
+        foreach ($this->_stats_used as $key => $stat) {
             switch ($stat) {
                 case LOC:
                     fwrite($this->_file, $stat_obj->get_loc() . PHP_EOL);
@@ -96,25 +103,28 @@ class Stats_file
     }
 
     # close file
-    function close() {fclose($this->_file);}
+    function close() { fclose($this->_file); }
 }
 
+/*
+ * Class for parsing arguments into stats_file objects
+ */
 class Bonus_arg_handler
 {
     private $_arguments;
     private $_argc;
     private $_stats_array = array();
 
-    public function __construct($argc, $command_args)
+    public function __construct($arg_counter, $command_args)
     {
         $this->_arguments = array_slice($command_args, 1);
-        $this->_argc = $argc;
+        $this->_argc = $arg_counter;
     }
 
     # parse arguments from command line into Stats_file objects
     public function parse_args()
     {
-        # parse help option
+        # help option
         if (in_array(HELP, $this->_arguments)) {
             if ($this->_argc > 2) {
                 # help with any other option
@@ -124,9 +134,10 @@ class Bonus_arg_handler
             exit(0);
         }
 
+        # iterate through all arguments
         foreach ($this->_arguments as $key => $value) {
             if (str_starts_with($value, STATS)) { # new file was added for statistics
-                $value = substr($value, strlen(STATS)+1); # remove '=' from value
+                $value = substr($value, strlen(STATS)+1); # remove '=' from filename
                 array_push($this->_stats_array, new Stats_file($value));
                 continue;
             }
@@ -146,6 +157,7 @@ class Bonus_arg_handler
         }
     }
 
+    # write statistics into statistic files
     public function write($stat)
     {
         foreach ($this->_stats_array as $key => $object) {
