@@ -1,24 +1,21 @@
-Implementační dokumentace k 1. úloze do IPP 2021/2022
-Jméno a příjmení: Adam Zvara
-Login: xzvara01
+Implementačná dokumentácia k 1. úlohe do IPP 2021/2022
+Meno a priezvisko: **Adam Zvara**
+Login: **xzvara01**
 
-POVODNE:Backed enumeration (enum s ciselnou hodnotou) je pouzity na vracianie ERROR CODES.
-Nakoniec som sa rozhodol pouzit konstanty uložené v súbore error_codes.php, pretoze tie enums su celkom nepekne na citanie (je potrebne pristupovat ku value)
+### Implementácia hlavnej časti
 
-Options programu sú parsované pomocou getopt.
-Hľadanie headeru ".IPPCODE22" prebieha vo while cykle aby sme preskočili možné komentáre na začiatku súboru.
-Každý riadok je pred spracovaním zbavený komentárov a whitespacov.
+Spracovanie vstupného súboru začína hľadaním hlavičky, ktoré prebieha v cykle, aby bolo možné preskočenie komentárov na začiatku súboru. Program je spracovávaný po riadkoch, pričom je každý zbavený komentárov a bielych znakov. Po úspešnom nájdní hlavičky sú zvyšné inštrukcie spracované v ďalšom cykle.
 
-Trieda Instruction reprezentuje jednu inštrukciu načítanú zo vstupu. Objekt inštrukcie je vytvorený po načítaní riadku a parameter pre vytvorenie je opcode. Priamo v konštruktore
-sa inkrementuje počet inštrukcie (order), ktorý je statický pre celú triedu. Trieda inštrukcie má 2 metódy (start/end)element na začatie zapisovania v XML formáte.
-Načítaný riadok je rozdelený na inštrukciu a argumenty. Následuje switch-case podľa typu načítanej inštrukcie. Jednotlivé vetvy switch-casu odpovedajú typom inštrukcií
-(typ inštrukcie je daný počtom a typom argumentov zo zadania).
+Každý načítaný riadok je po odstránení komentárov rozdelený na inštrukciu a prípadné argumenty. Na spracovanie inštrukcií je použitá trieda *Instruction*, ktorá obsahuje základné informácie o načítnej inštrukcii (operačný kód, poradie, počet argumentov). Poradie inštrukcie, je statická premenná a zvyšuje sa pri každom vytvorením nového objektu. Na zápis do výstupného XML formátu slúžia metódy *start_element/end_element*, ktorých zápis je realizovaný pomocou triedy *XMLWriter*. Zámenu špeciálnych znakov v názve premenných alebo v literáloch zapezpečuje knižnica XMLWriter.
 
-Po určení typu inštrukcie sa spustí metóda na zápis argumentov (write_arguments), ktorej parametrami sú načítané argumenty a predané typy argumentov. Argumenty sú prechádzané postupne a kontroluje sa, či sedí ich typ s príslušným regexom. Pre argument typu symbol sa identifikuje jeho typ: ak je to premenná, ponechá sa v celom tvare a jeho type bude 'var'.
-Ak je to literál, rozdelí sa na čast pred '@' a časť po ňom. Pre ostané typy sú zavolané metody na porovnavanie s regexami, ktoré sú vytvorené zo stringového mena typu:
+Podľa typu inštrukcie, ktorý je daný počtom a typom argumentov zo zadania, sa kontrolujé platnosť jednotlivých argumenty. Na kontrolu povolených znakov v jednotlivých argumentoch sa používajú regulárne výrazy.
 
-call_user_func(array($this, $type.'_match'), $curr_arg);
-na príklad: pre type='var', sa zavolá funkcia $this->var_match($curr_arg)
+## Implementácia rozšírenia
+#### Spracovanie argumentov
+Argumenty sú postupne spracované v triede *Bonus_arg_handler*. Dôležitou časťou tejto triedy je zoznam *stats_array*, v ktorom sú udržiavané objekty triedy *Stat_file*, ktoré sú vytvorené po načítaní možnosti *--stats=file*. Tieto objekty obsaujú zoznam *stats_used*, ktorý je naplnený skupinou štatistík zadanou za možnosťou *--stats*. Takýmto spôsobom sa uchováva to, aké súbory majú byť vytvorené a aké skupiny štatistík majú obsahovať.
 
-Premienanie specialnych znakov zabezpecuje kniznica XMLWriter
+#### Výpočet štatistík:
+Pre výpočet štatistík sa používa trieda *Statistics*. Jednoduché štatistiky ako loc, comments, jumps, labels majú počítadlá, ktoré sú modifikované priamo v priebehu analýzy programu. Štatistiky dopredných a spätných skokov sú vypočítané po celkovej analýze programu. Pre každú inštrukciu skoku sú uchovávané informácie o cieľovom návestí a pozícia inštrukcie skoku v kóde. Rovnaké informácie sú uložené aj pre návestia. Pri dopočítavaní dopredných a spätných skokov sa iteruje cez všetky uložené ciele skoku a hľadajú sa príslušné návestia s rovnakým menom. Následne sa pre všetky výskyty v kóde zisťuje (podľa pozície inštrukcie v kóde), či došlo ku skoku späť alebo vopred. Počet skokov na nedefinované návestie je vypočítaný ako rozdiel množín uložených cieľov skoku a uložených návestí.
 
+#### Zápis do súboru:
+Po zistení vypočítaní všetkých štatistík je pre každý objekt v zoznam *stats_file* vytvorený súbor, do ktorého sú zapísané požadované štatistiky.
