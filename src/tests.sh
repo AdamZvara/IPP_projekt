@@ -172,3 +172,4 @@ fi
 echo "Passed" $TEST_PASSED "tests out of" $TEST_COUNT
 
 rm -rf tmp*
+rm -rf file*
