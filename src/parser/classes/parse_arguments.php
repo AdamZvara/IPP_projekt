@@ -1,7 +1,7 @@
 <?php
 
-include 'error_codes.php';
-include 'statistics.php';
+include_once 'error_codes.php';
+include_once 'statistics.php';
 
 const HELP_MESSAGE = "USAGE: php parse.php [OPT]\n" .
                      "Parse IPPcode22 source code from standard " .

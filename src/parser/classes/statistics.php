@@ -84,9 +84,7 @@ class Statistics
                 }
             }
         }
-        return 0;
     }
-
 }
 
 ?>

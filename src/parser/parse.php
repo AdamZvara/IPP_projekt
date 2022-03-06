@@ -1,8 +1,14 @@
 <?php
-include 'classes/error_codes.php';      # error codes declarations
-include 'classes/parse_arguments.php';  # parsing arguments
-include 'classes/instruction.php';  # class for instruction parsing
-#class statistics in included from parse_arguments
+/**
+ * @brief   Main file for parsing IPPcode22 language into XML representation
+ * @date    6.3.2022
+ * @author  xzvara01, xzvara01@stud.fit.vutbr.cz
+ */
+
+include_once 'classes/error_codes.php';      # error codes declarations
+include_once 'classes/parse_arguments.php';  # class for parsing arguments
+include_once 'classes/instruction.php';      # class for instruction parsing
+include_once 'classes/statistics.php';       # class for bonus extention
 
 ini_set('display_errors', 'stderr');
 

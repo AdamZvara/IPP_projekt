@@ -1,5 +1,5 @@
 <?php
-include 'error_codes.php';
+include_once 'error_codes.php';
 
 # class representing single instruction, which is being parsed
 class Instruction
