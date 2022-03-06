@@ -1,7 +1,7 @@
 <?php
-include 'error_codes.php';      # error codes declarations
-include 'parse_arguments.php';  # parsing arguments
-include 'instruction.php';  # class for instruction parsing
+include 'classes/error_codes.php';      # error codes declarations
+include 'classes/parse_arguments.php';  # parsing arguments
+include 'classes/instruction.php';  # class for instruction parsing
 #class statistics in included from parse_arguments
 
 ini_set('display_errors', 'stderr');

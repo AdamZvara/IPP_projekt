@@ -21,3 +21,4 @@ call_user_func(array($this, $type.'_match'), $curr_arg);
 na príklad: pre type='var', sa zavolá funkcia $this->var_match($curr_arg)
 
 Premienanie specialnych znakov zabezpecuje kniznica XMLWriter
+
