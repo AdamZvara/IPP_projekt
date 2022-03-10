@@ -1,6 +1,6 @@
 from program import Program, Instruction
 from xml_representation import XML_representation
-from variable import Variable_manager
+from variable_manager import Variable_manager
 from input import Input
 from sys import exit
 
@@ -10,13 +10,13 @@ program = Program()
 
 # Parse XML file into program object
 for instruction_element in xml.get_root():
-    xml.instruction_is_valid(instruction_element)
+    xml.instruction_valid(instruction_element)
     attribute = instruction_element.attrib
     # create new instruction object to be inserted into program instructions
     instr = Instruction(attribute['opcode'], attribute['order'])
     for argument in instruction_element:
         # add arguments to instruction object
-        xml.argument_is_valid(argument)
+        xml.argument_valid(argument)
         instr.arg_add(argument)
     instr.arg_valid_amount()
     program.add_instruction(instr)

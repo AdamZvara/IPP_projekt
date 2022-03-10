@@ -1,5 +1,5 @@
 import xml.etree.ElementTree as ET
-from program import Instruction
+from instruction import Instruction
 from sys import exit
 
 # Class to encapsulate working with XML representation
