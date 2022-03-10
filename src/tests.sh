@@ -74,9 +74,9 @@ function interpret_test()
             src=$INTERPRET_TESTS/$DIR/$TEST_NAME'.src'
             input=$INTERPRET_TESTS/$DIR/$TEST_NAME'.in'
             if [ -f $input ]; then
-                python3 interpret.py --source=$src --input=$input > tmp 2>/dev/null
+                python3 interpret/interpret.py --source=$src --input=$input > tmp 2>/dev/null
             else
-                python3 interpret.py --source=$src > tmp
+                python3 interpret/interpret.py --source=$src > tmp
             fi
             RETVAL=$?
             RETVAL_EXPECTED=$(cat "$INTERPRET_TESTS/$DIR/$TEST_NAME.rc")
