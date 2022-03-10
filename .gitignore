@@ -1,6 +1,6 @@
 src/ipp-2022-tests
 src/supplementary
-src/__pycache__
+src/interpret/__pycache__
 .vscode
 ic21int
 src/poznamky
