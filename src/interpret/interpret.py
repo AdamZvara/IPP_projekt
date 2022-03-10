@@ -1,48 +1,11 @@
-import argparse
 from program import Program, Instruction
 from xml_representation import XML_representation
 from variable import Variable_manager
-from sys import stdin, exit
+from input import Input
+from sys import exit
 
-# parse given arguments from command line
-parser = argparse.ArgumentParser(description='Interpret code given in XML format')
-parser.add_argument('--source', help='source XML file')
-parser.add_argument('--input', help='input to interpreted program')
-
-args = parser.parse_args()
-
-class Input:
-    def __init__(self, xml_file : any, input_file : any):
-        self.__input_file = None
-        self.__xml_file = stdin
-        if ((xml_file == None) and (input_file == None)):
-            exit(10)
-        if (input_file != None):
-            try:
-                self.__input_file = open(input_file, "r")
-            except FileNotFoundError:
-                exit(11)
-        if (xml_file != None):
-            self.__xml_file = xml_file
-
-    def get_line(self):
-        if self.__input_file == None:
-            return input()
-        else:
-            line = self.__input_file.readline()
-            if line[-1] == '\n':
-                line = line[:-1]
-            return line
-
-    def get_xml_file(self):
-        return self.__xml_file
-
-    def __del__(self):
-        if (self.__input_file != None):
-            self.__input_file.close()
-
-program_input = Input(args.source, args.input)
-xml = XML_representation(program_input.get_xml_file())
+input_files = Input()
+xml = XML_representation(input_files.get_source())
 program = Program()
 
 # Parse XML file into program object
@@ -160,7 +123,7 @@ while instruction := program.get_instruction():
     elif (opcode == 'READ'):
         var = instruction.get_argument(0)
         type = instruction.get_argument(1)
-        user_input = program_input.get_line()
+        user_input = input_files.get_input_line()
         if (type.value == 'bool'):
             if (user_input.lower() == 'true'):
                 variable_manager.insert_value(var, 'true', 'bool')
