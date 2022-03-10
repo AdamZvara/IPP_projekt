@@ -1,16 +1,6 @@
 from instruction import Instruction
 from argument import Argument
-
-class Label:
-    def __init__(self, name : str, pos : int) -> None:
-        self.__name = name
-        self.__pos = pos
-
-    def get_name(self):
-        return self.__name
-
-    def get_pos(self):
-        return self.__pos
+from label import Label
 
 # Class used for interpreting program
 # Contains instruction objects stored in list and keeps position of currently
@@ -18,9 +8,8 @@ class Label:
 class Program:
     __instructions = list()
     __instructions_pos = 0
-    labels = list()
-    call_stack = list()
-    stack = list()
+    __call_stack = list()
+    __stack = list()
 
     # Get next interpreted instruction but do not change instruction_pos
     # If there are no more instructions return None
@@ -38,7 +27,7 @@ class Program:
     # check if instruction order was not used already
     def add_instruction(self, instr : Instruction) -> None:
         for i in self.__instructions:
-            if instr.get_order() == i.get_order():
+            if instr.order == i.order:
                 exit(32)
         self.__instructions.append(instr)
 
@@ -53,52 +42,33 @@ class Program:
 
     # Iterate thourgh instructions and set labels
     def create_labels(self):
+        self.__labels = list()
         for pos, instruction in enumerate(self.__instructions):
-            if instruction.get_opcode() == 'LABEL':
+            if instruction.opcode == 'LABEL':
                 name = instruction.get_argument(0).value
-                label = Label(name, pos)
                 if self.label_find(name):
                     exit(52)
-                self.labels.append(label)
+                self.__labels.append(Label(name, pos))
 
     # Find and return label with given name, otherwise return None
     def label_find(self, name : str) -> Label:
-        for l in self.labels:
-            if l.get_name() == name:
+        for l in self.__labels:
+            if l.name == name:
                 return l
         return None
 
     def jump(self, label : Argument):
         if not (label := self.label_find(label.value)):
             exit(52)
-        self.__instructions_pos = label.get_pos()
+        self.__instructions_pos = label.pos
 
     def call(self, label : Argument):
-        self.call_stack.append(self.__instructions_pos)
+        self.__call_stack.append(self.__instructions_pos)
         self.jump(label)
 
     def return_function(self):
-        self.__instructions_pos = self.call_stack.pop()
+        self.__instructions_pos = self.__call_stack.pop()
 
     def pushs(self, arg : Argument) -> None:
         if (arg.type == 'var'):
-            self.stack.append(arg)
-
-    ####################### DELETE LATER #######################
-    def __str__(self):
-        s = "Variables:\n"
-        for key in self.variables:
-            s += "\t"+key+": "
-            for var in self.variables[key]:
-                s += var
-                s += ", "
-            s += "\n"
-        s += "\nLabels: "
-        for label in self.labels:
-            s += label
-            s += ", "
-        s += "\n"
-        for inst in self.__instructions:
-            s += str(inst)
-            s += "\n"
-        return s
+            self.__stack.append(arg)

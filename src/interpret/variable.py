@@ -1,5 +1,4 @@
 # Class for storing variables of interpreted program
-# Frame (GF/LF/TF), name and value are stored for each variable
 class Variable():
     def __init__(self, whole_name : str) -> None:
         self.__frame = whole_name[:2]   # GF/TF/LF without @
@@ -7,30 +6,30 @@ class Variable():
         self.__value = None
         self.__type = ''
 
-    def get_frame(self) -> str:
+    @property
+    def frame(self):
         return self.__frame
 
-    def get_name(self) -> str:
+    @frame.setter
+    def frame(self, value):
+        self.__frame = value
+
+    @property
+    def name(self):
         return self.__name
 
-    def get_value(self) -> any:
+    @property
+    def value(self):
         return self.__value
 
-    def set_value(self, value : any) -> None:
-        self.__value = value
+    @value.setter
+    def value(self, val):
+        self.__value = val
 
-    def set_type(self, type : str) -> None:
-        self.__type = type
-
-    def get_type(self) -> str:
+    @property
+    def type(self):
         return self.__type
 
-    def TF_to_LF(self) -> None:
-        self.__frame = 'LF'
-
-    def LF_to_TF(self) -> None:
-        self.__frame = 'TF'
-
-
-
-
+    @type.setter
+    def type(self, value):
+        self.__type = value

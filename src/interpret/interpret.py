@@ -61,7 +61,7 @@ arithmetic = ['ADD', 'SUB', 'IDIV', 'MUL']
 
 # Go through each instruction in program object and interpret it
 while instruction := program.get_instruction():
-    opcode = instruction.get_opcode()
+    opcode = instruction.opcode
     if (opcode == 'DEFVAR'):
         variable_manager.add(instruction.get_argument(0))
     elif (opcode == 'WRITE'):

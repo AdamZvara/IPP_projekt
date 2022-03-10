@@ -1,5 +1,5 @@
 from sys import stderr
-from program import Argument
+from argument import Argument
 from variable import Variable
 from re import search, sub
 
@@ -14,12 +14,11 @@ class Variable_manager():
     # variable name
     def add(self, variable : Argument) -> None:
         var = Variable(variable.value)
-        frame = var.get_frame()
         try:
             if not self.find(variable.value):
-                if frame == 'TF' and not self.__temp_frame_active:
+                if var.frame == 'TF' and not self.__temp_frame_active:
                     exit(55)
-                self.__frames[frame].append(var)
+                self.__frames[var.frame].append(var)
             else:
                 exit(52)
         except KeyError:
@@ -31,27 +30,27 @@ class Variable_manager():
         if (frame == 'TF') and not self.__temp_frame_active:
             exit(55)
         for var in self.__frames[frame]:
-            if (var.get_name() == name[3:]):
+            if (var.name == name[3:]):
                 return var
         return None
 
     # Insert value into variable, if variable exists
     def insert_value(self, dest : Argument, value : any, type : str) -> None:
         if var := self.find(dest.value):
-            var.set_value(value)
-            var.set_type(type)
+            var.value = value
+            var.type = type
         else:
             exit(54)
 
     def get_type(self, var_name : str):
         if var := self.find(var_name):
-            return var.get_type()
+            return var.type
         else:
             exit(54)
 
     def get_value(self, var_name : str) -> any:
         if var := self.find(var_name):
-            return var.get_value()
+            return var.value
         else:
             exit(54)
 
@@ -69,12 +68,12 @@ class Variable_manager():
         if (arg.type == 'var'):
             if not (var := self.find(arg.value)):
                 exit(54)
-            if var.get_type() == 'string':
-                result = self.escape_sequences(str(var.get_value()))
-            elif var.get_type() == 'float':
-                result = float.hex(var.get_value())
+            if var.type == 'string':
+                result = self.escape_sequences(str(var.value))
+            elif var.type == 'float':
+                result = float.hex(var.value)
             else:
-                result = var.get_value()
+                result = var.value
         else:
             if (arg.type == 'string'):
                 result = self.escape_sequences(str(arg.value))
@@ -88,7 +87,7 @@ class Variable_manager():
         if (arg.type == 'var'):
             if not (var := self.find(arg.value)):
                 exit(54)
-            print(var.get_value(), end='', file=stderr)
+            print(var.value, end='', file=stderr)
         else:
             print(arg.value, end='', file=stderr)
 
@@ -107,7 +106,7 @@ class Variable_manager():
             self.__local_frames_stack.append(self.__frames['LF'])
         self.__frames.update({'LF':self.__frames['TF']})
         for arg in self.__frames['LF']:
-            arg.TF_to_LF()
+            arg.frame = 'LF'
         self.__frames.update({'TF':list()})
         self.__temp_frame_active = False
 
@@ -120,14 +119,14 @@ class Variable_manager():
         self.__frames.update({'TF': self.__frames['LF']})
         self.__frames.update({'LF': LF_stack_top})
         for arg in self.__frames['LF']:
-            arg.LF_to_TF()
+            arg.frame = 'TF'
         self.__temp_frame_active = True
 
     def exit(self, arg : Argument) -> None:
         if (arg.type == 'var'):
             if not (var := self.find(arg.value)):
                 exit(54)
-            value = var.get_value()
+            value = var.value
         else:
             value = arg.value
         if value < 0 or value > 49:
