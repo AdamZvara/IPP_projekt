@@ -69,6 +69,10 @@ while instruction := program.get_instruction():
         program.float2int(instruction[0], instruction[1])
     elif (opcode == 'INT2FLOAT'):
         program.int2float(instruction[0], instruction[1])
+    elif (opcode == 'INT2CHAR'):
+        program.int2char(instruction[0], instruction[1])
+    elif (opcode == 'STRI2INT'):
+        program.stri2int(instruction[0], instruction[1])
     elif (opcode == 'LABEL'):
         pass
     else:

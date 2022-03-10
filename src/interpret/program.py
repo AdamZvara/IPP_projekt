@@ -14,7 +14,7 @@ class Program:
     __stack = list()
     __var_manager = Variable_manager()
     __types = ['int', 'bool', 'nil', 'string', 'float']
-    __arithmetic = ['ADD', 'SUB', 'IDIV', 'MUL', 'DIV']
+    __arithmetic = ['ADD', 'SUB', 'IDIV', 'MUL', 'DIV', 'ADDS', 'SUBS', 'IDIVS', 'MULS']
 
     # Get next interpreted instruction but do not change instruction_pos
     # If there are no more instructions return None
@@ -62,9 +62,16 @@ class Program:
                 return l
         return None
 
+    def __stack_pop(self):
+        if len(self.__stack) == 0:
+            exit(56)
+        return self.__stack.pop()
+
     @property
     def arithmetics(self):
         return self.__arithmetic
+
+    # INSTRUCTION METHODS
 
     def defvar(self, arg):
         self.__var_manager.add(arg)
@@ -159,7 +166,7 @@ class Program:
     def pops(self, var : Argument) -> None:
         if (var.type != 'var'):
             exit(56)
-        stack_item = self.__stack.pop()
+        stack_item = self.__stack_pop()
         self.__var_manager.insert_value(var, stack_item[0], stack_item[1])
 
     def jumpifeq(self, instruction):
@@ -175,8 +182,11 @@ class Program:
             self.jump(target)
 
     def arithmetic_functions(self, instruction):
-        var = instruction[0]
-        (value1, value2, result_type) = self.set_args_arithmetics(instruction)
+        if instruction.opcode[-1] == 'S':
+            (value1, value2, result_type) = self.set_args_arithmetics_stack()
+        else:
+            var = instruction[0]
+            (value1, value2, result_type) = self.set_args_arithmetics(instruction)
         if instruction.opcode == 'ADD':
             self.__var_manager.insert_value(var, value1+value2, result_type)
         elif instruction.opcode == 'SUB':
@@ -193,6 +203,16 @@ class Program:
             if value2 == 0:
                 exit(57)
             self.__var_manager.insert_value(var, value1//value2, result_type)
+        elif instruction.opcode == 'ADDS':
+            self.__stack.append([value1[0]+value2[0], 'int'])
+        elif instruction.opcode == 'SUBS':
+            self.__stack.append([value1[0]-value2[0], 'int'])
+        elif instruction.opcode == 'MULS':
+            self.__stack.append([value1[0]*value2[0], 'int'])
+        elif instruction.opcode == 'IDIVS':
+            self.__stack.append([value1[0]//value2[0], 'int'])
+            if value2 == 0:
+                exit(57)
 
     def __literal_or_variable(self, operand):
             if (operand.type == 'var'):
@@ -224,18 +244,48 @@ class Program:
             result_type = 'int'
         return (value1,value2, result_type)
 
-    def float2int(self, dst, value):
+    def set_args_arithmetics_stack(self):
+        allowed = ['int', 'var']
+        value2 = self.__stack_pop()
+        value1 = self.__stack_pop()
+        if value1[1] not in allowed or value2[1] not in allowed or type(value1[0]) != type(value2[0]):
+            exit(53)
+        return (value1,value2, 'int')
+
+    # CONVERSION METHODS
+
+    def __pre_conversion(self, value, desired_type):
         val = self.__literal_or_variable(value)
         if val == None:
             exit(56)
-        elif type(val) is not float:
+        elif type(val) is not desired_type:
             exit(53)
-        self.__var_manager.insert_value(dst, int(val), 'int')
+        return val
+
+    def float2int(self, dst, value):
+        val = self.__pre_conversion(value, float)
+        try:
+            self.__var_manager.insert_value(dst, int(val), 'int')
+        except Exception:
+            exit(58)
 
     def int2float(self, dst, value):
-        val = self.__literal_or_variable(value)
-        if val == None:
-            exit(56)
-        elif type(val) is not int:
-            exit(53)
-        self.__var_manager.insert_value(dst, float(val), 'float')
+        val = self.__pre_conversion(value, int)
+        try:
+            self.__var_manager.insert_value(dst, float(val), 'float')
+        except Exception:
+            exit(58)
+
+    def int2char(self, dst, value):
+        val = self.__pre_conversion(value, int)
+        try:
+            self.__var_manager.insert_value(dst, chr(val), 'char')
+        except Exception:
+            exit(58)
+
+    def stri2int(self, dst, value):
+        val = self.__pre_conversion(value, str)
+        try:
+            self.__var_manager.insert_value(dst, ord(val), 'int')
+        except Exception:
+            exit(58)
