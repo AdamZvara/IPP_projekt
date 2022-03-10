@@ -1,7 +1,6 @@
 from sys import stderr
 from argument import Argument
 from variable import Variable
-from re import search, sub
 
 # Manager class to work with variables in interpreted program
 class Variable_manager():
@@ -54,34 +53,19 @@ class Variable_manager():
         else:
             exit(54)
 
-    def escape_sequences(self, string : str):
-        escape_re = "\\\\[0-9][0-9][0-9]"
-        matches = search(escape_re, string)
-        if matches != None:
-            for escape in matches.regs:
-                escaped = chr(int(string[escape[0]+1:escape[1]]))
-                string = sub(escape_re, escaped, string)
-        return string
-
-    # Print out value of given variable
-    def print(self, arg : Argument) -> None:
-        if (arg.type == 'var'):
-            if not (var := self.find(arg.value)):
-                exit(54)
-            if var.type == 'string':
-                result = self.escape_sequences(str(var.value))
-            elif var.type == 'float':
-                result = float.hex(var.value)
-            else:
-                result = var.value
+    # Return variable value, which will be printed
+    def print(self, arg : Argument):
+        if not (var := self.find(arg.value)):
+            exit(54)
+        if var.type == 'string':
+            result = str(var.value)
+        elif var.type == 'float':
+            result = float.hex(var.value)
+        elif var.type == 'nil':
+            result = ''
         else:
-            if (arg.type == 'string'):
-                result = self.escape_sequences(str(arg.value))
-            elif (arg.type == 'float'):
-                result = float.hex(arg.value)
-            else:
-                result = arg.value
-        print(result, end='')
+            result = var.value
+        return result, var.type
 
     def dprint(self, arg : Argument) -> None:
         if (arg.type == 'var'):

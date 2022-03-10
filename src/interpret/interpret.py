@@ -25,8 +25,6 @@ for instruction_element in xml.get_root():
 program.sort()
 program.create_labels()
 
-arithmetic = ['ADD', 'SUB', 'IDIV', 'MUL']
-
 # Go through each instruction in program object and interpret it
 while instruction := program.get_instruction():
     opcode = instruction.opcode
@@ -65,6 +63,12 @@ while instruction := program.get_instruction():
         program.read(instruction[0], instruction[1], user_input)
     elif (opcode == 'PUSHS'):
         program.pushs(instruction[0])
+    elif (opcode == 'POPS'):
+        program.pops(instruction[0])
+    elif (opcode == 'FLOAT2INT'):
+        program.float2int(instruction[0], instruction[1])
+    elif (opcode == 'INT2FLOAT'):
+        program.int2float(instruction[0], instruction[1])
     elif (opcode == 'LABEL'):
         pass
     else:

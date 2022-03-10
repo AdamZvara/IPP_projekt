@@ -2,6 +2,7 @@ from instruction import Instruction
 from argument import Argument
 from variable_manager import Variable_manager
 from label import Label
+from re import search, sub
 
 # Class used for interpreting program
 # Contains instruction objects stored in list and keeps position of currently
@@ -13,7 +14,7 @@ class Program:
     __stack = list()
     __var_manager = Variable_manager()
     __types = ['int', 'bool', 'nil', 'string', 'float']
-    __arithmetic = ['ADD', 'SUB', 'IDIV', 'MUL']
+    __arithmetic = ['ADD', 'SUB', 'IDIV', 'MUL', 'DIV']
 
     # Get next interpreted instruction but do not change instruction_pos
     # If there are no more instructions return None
@@ -65,12 +66,34 @@ class Program:
     def arithmetics(self):
         return self.__arithmetic
 
-    def defvar(self, argument):
-        self.__var_manager.add(argument)
+    def defvar(self, arg):
+        self.__var_manager.add(arg)
 
-    def print(self, argument):
+    def __escape_sequences(self, string : str):
+        escape_re = "\\\\[0-9][0-9][0-9]"
+        matches = search(escape_re, string)
+        if matches != None:
+            for escape in matches.regs:
+                escaped = chr(int(string[escape[0]+1:escape[1]]))
+                string = sub(escape_re, escaped, string)
+        return string
+
+    def print(self, arg):
         # TODO special characters &gt, &lt ...
-        self.__var_manager.print(argument)
+        if (arg.type == 'var'):
+            (result,type) = self.__var_manager.print(arg)
+            if (type == 'string'):
+                result = self.__escape_sequences(result)
+        else:
+            if (arg.type == 'string'):
+                result = self.__escape_sequences(str(arg.value))
+            elif (arg.type == 'float'):
+                result = float.hex(arg.value)
+            elif (arg.type == 'nil'):
+                result = ''
+            else:
+                result = arg.value
+        print(result, end='')
 
     def move(self, src, arg):
         self.__var_manager.insert_value(src, arg.value, arg.type)
@@ -98,17 +121,20 @@ class Program:
             self.__var_manager.insert_value(var, self.__var_manager.get_type(symbol.value), 'string')
 
     def read(self, var, type, user_input):
-        if (type.value == 'bool'):
-            if (user_input.lower() == 'true'):
-                self.__var_manager.insert_value(var, 'true', 'bool')
-            else:
-                self.__var_manager.insert_value(var, 'false', 'bool')
-        elif (type.value == 'int'):
-            self.__var_manager.insert_value(var, int(user_input), 'int')
-        elif (type.value == 'string'):
-            self.__var_manager.insert_value(var, user_input, 'string')
-        else:
-            exit(53)
+        try:
+            if (type.value == 'bool'):
+                if (user_input.lower() == 'true'):
+                    self.__var_manager.insert_value(var, 'true', 'bool')
+                else:
+                    self.__var_manager.insert_value(var, 'false', 'bool')
+            elif (type.value == 'int'):
+                self.__var_manager.insert_value(var, int(user_input), 'int')
+            elif (type.value == 'string'):
+                self.__var_manager.insert_value(var, user_input, 'string')
+            elif (type.value == 'float'):
+                self.__var_manager.insert_value(var, float.fromhex(user_input), 'float')
+        except Exception:
+            self.__var_manager.insert_value(var, 'nil', 'nil')
 
     def jump(self, label : Argument):
         if not (label := self.label_find(label.value)):
@@ -123,8 +149,18 @@ class Program:
         self.__instructions_pos = self.__call_stack.pop()
 
     def pushs(self, arg : Argument) -> None:
-        if (arg.type == 'var'):
-            self.__stack.append(arg)
+        if (arg.type != 'var'):
+            self.__stack.append([arg.value, arg.type])
+        else:
+            name = self.__var_manager.get_value(arg.value)
+            type = self.__var_manager.get_type(arg.value)
+            self.__stack.append(name, type)
+
+    def pops(self, var : Argument) -> None:
+        if (var.type != 'var'):
+            exit(56)
+        stack_item = self.__stack.pop()
+        self.__var_manager.insert_value(var, stack_item[0], stack_item[1])
 
     def jumpifeq(self, instruction):
         target = instruction[0]
@@ -141,13 +177,19 @@ class Program:
     def arithmetic_functions(self, instruction):
         var = instruction[0]
         (value1, value2, result_type) = self.set_args_arithmetics(instruction)
-        if (instruction.opcode == 'ADD'):
+        if instruction.opcode == 'ADD':
             self.__var_manager.insert_value(var, value1+value2, result_type)
-        elif (instruction.opcode == 'SUB'):
+        elif instruction.opcode == 'SUB':
             self.__var_manager.insert_value(var, value1-value2, result_type)
-        elif (instruction.opcode == 'MUL'):
+        elif instruction.opcode == 'MUL':
             self.__var_manager.insert_value(var, value1*value2, result_type)
-        elif (instruction.opcode == 'IDIV'):
+        elif instruction.opcode == 'IDIV':
+            if value2 == 0:
+                exit(57)
+            self.__var_manager.insert_value(var, value1//value2, result_type)
+        elif instruction.opcode == 'DIV':
+            if type(value1) is not float or type(value2) is not float:
+                exit(53)
             if value2 == 0:
                 exit(57)
             self.__var_manager.insert_value(var, value1//value2, result_type)
@@ -167,12 +209,33 @@ class Program:
         op1 = instruction[1]
         op2 = instruction[2]
         allowed = ['int', 'var', 'float']
-        if (op1.type not in allowed or op2.type not in allowed):
+        if op1.type not in allowed or op2.type not in allowed:
             exit(53)
+
         value1 = self.__literal_or_variable(instruction[1])
         value2 = self.__literal_or_variable(instruction[2])
-        if (type(value1) is float or type(value2) is float):
+
+        if type(value1) != type(value2):
+            exit(53)
+
+        if type(value1) is float or type(value2) is float:
             result_type = 'float'
         else:
             result_type = 'int'
         return (value1,value2, result_type)
+
+    def float2int(self, dst, value):
+        val = self.__literal_or_variable(value)
+        if val == None:
+            exit(56)
+        elif type(val) is not float:
+            exit(53)
+        self.__var_manager.insert_value(dst, int(val), 'int')
+
+    def int2float(self, dst, value):
+        val = self.__literal_or_variable(value)
+        if val == None:
+            exit(56)
+        elif type(val) is not int:
+            exit(53)
+        self.__var_manager.insert_value(dst, float(val), 'float')
