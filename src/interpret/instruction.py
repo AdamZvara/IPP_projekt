@@ -30,20 +30,20 @@ class Instruction:
     def opcode(self) -> str:
         return self.__opcode
 
-    # Fetch argument at given position
-    def get_argument(self, pos : int) -> Argument:
+    # accessing arguments with [] operators
+    def __getitem__(self, pos) -> Argument:
         try:
             return self.__args[pos]
         except KeyError:
             return None
 
-    # Add new argument to objects argument list
-    def arg_add(self, argument) -> None:
+    # create new argument
+    def newarg(self, argument):
         self.__args.append(Argument(argument))
         self.__arg_count += 1
 
     # Sort arguments based on XML element <argX>
-    def arg_sort(self) -> None:
+    def sort(self) -> None:
         self.__args.sort(key=lambda x: x.order)
 
     # Check if instruction has the right amount of arguments

@@ -1,5 +1,6 @@
 from instruction import Instruction
 from argument import Argument
+from variable_manager import Variable_manager
 from label import Label
 
 # Class used for interpreting program
@@ -10,6 +11,9 @@ class Program:
     __instructions_pos = 0
     __call_stack = list()
     __stack = list()
+    __var_manager = Variable_manager()
+    __types = ['int', 'bool', 'nil', 'string', 'float']
+    __arithmetic = ['ADD', 'SUB', 'IDIV', 'MUL']
 
     # Get next interpreted instruction but do not change instruction_pos
     # If there are no more instructions return None
@@ -27,17 +31,17 @@ class Program:
     # check if instruction order was not used already
     def add_instruction(self, instr : Instruction) -> None:
         for i in self.__instructions:
-            if instr.order == i.order:
+            if i.order == instr.order:
                 exit(32)
         self.__instructions.append(instr)
 
     # sort instructions by order and sort arguments for each instruction
     # check if each instruction has arguments in correct format
         # e.g starting <arg2> is wrong, 1st argument should be <arg1>
-    def instructions_sort(self):
+    def sort(self):
         self.__instructions.sort(key=lambda x: x.order)
         for instruction in self.__instructions:
-            instruction.arg_sort()
+            instruction.sort()
             instruction.arg_valid()
 
     # Iterate thourgh instructions and set labels
@@ -45,7 +49,7 @@ class Program:
         self.__labels = list()
         for pos, instruction in enumerate(self.__instructions):
             if instruction.opcode == 'LABEL':
-                name = instruction.get_argument(0).value
+                name = instruction[0].value
                 if self.label_find(name):
                     exit(52)
                 self.__labels.append(Label(name, pos))
@@ -56,6 +60,55 @@ class Program:
             if l.name == name:
                 return l
         return None
+
+    @property
+    def arithmetics(self):
+        return self.__arithmetic
+
+    def defvar(self, argument):
+        self.__var_manager.add(argument)
+
+    def print(self, argument):
+        # TODO special characters &gt, &lt ...
+        self.__var_manager.print(argument)
+
+    def move(self, src, arg):
+        self.__var_manager.insert_value(src, arg.value, arg.type)
+
+    def createframe(self):
+        self.__var_manager.TF_create()
+
+    def pushframe(self):
+        self.__var_manager.TF_push()
+
+    def popframe(self):
+        self.__var_manager.TF_pop()
+
+    def dprint(self, value):
+        self.__var_manager.dprint(value)
+
+    def exit(self, value):
+        self.__var_manager.exit(value)
+
+    def type(self, var, symbol):
+        for type in self.__types:
+            if (symbol.type == type):
+                self.__var_manager.insert_value(var, type, 'string')
+        if (symbol.type == 'var'):
+            self.__var_manager.insert_value(var, self.__var_manager.get_type(symbol.value), 'string')
+
+    def read(self, var, type, user_input):
+        if (type.value == 'bool'):
+            if (user_input.lower() == 'true'):
+                self.__var_manager.insert_value(var, 'true', 'bool')
+            else:
+                self.__var_manager.insert_value(var, 'false', 'bool')
+        elif (type.value == 'int'):
+            self.__var_manager.insert_value(var, int(user_input), 'int')
+        elif (type.value == 'string'):
+            self.__var_manager.insert_value(var, user_input, 'string')
+        else:
+            exit(53)
 
     def jump(self, label : Argument):
         if not (label := self.label_find(label.value)):
@@ -72,3 +125,54 @@ class Program:
     def pushs(self, arg : Argument) -> None:
         if (arg.type == 'var'):
             self.__stack.append(arg)
+
+    def jumpifeq(self, instruction):
+        target = instruction[0]
+        (value1,value2) = self.set_args(instruction)
+        if (value1 == value2):
+            self.jump(target)
+
+    def jumpifneq(self, instruction):
+        target = instruction[0]
+        (value1,value2) = self.set_args(instruction)
+        if (value1 == value2):
+            self.jump(target)
+
+    def arithmetic_functions(self, instruction):
+        var = instruction[0]
+        (value1, value2, result_type) = self.set_args_arithmetics(instruction)
+        if (instruction.opcode == 'ADD'):
+            self.__var_manager.insert_value(var, value1+value2, result_type)
+        elif (instruction.opcode == 'SUB'):
+            self.__var_manager.insert_value(var, value1-value2, result_type)
+        elif (instruction.opcode == 'MUL'):
+            self.__var_manager.insert_value(var, value1*value2, result_type)
+        elif (instruction.opcode == 'IDIV'):
+            if value2 == 0:
+                exit(57)
+            self.__var_manager.insert_value(var, value1//value2, result_type)
+
+    def __literal_or_variable(self, operand):
+            if (operand.type == 'var'):
+                return self.__var_manager.get_value(operand.value)
+            else:
+                return operand.value
+
+    def set_args(self, instruction):
+        value1 = self.__literal_or_variable(instruction[1])
+        value2 = self.__literal_or_variable(instruction[2])
+        return (value1,value2)
+
+    def set_args_arithmetics(self, instruction):
+        op1 = instruction[1]
+        op2 = instruction[2]
+        allowed = ['int', 'var', 'float']
+        if (op1.type not in allowed or op2.type not in allowed):
+            exit(53)
+        value1 = self.__literal_or_variable(instruction[1])
+        value2 = self.__literal_or_variable(instruction[2])
+        if (type(value1) is float or type(value2) is float):
+            result_type = 'float'
+        else:
+            result_type = 'int'
+        return (value1,value2, result_type)
