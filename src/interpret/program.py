@@ -2,6 +2,7 @@ from instruction import Instruction
 from argument import Argument
 from variable_manager import Variable_manager
 from label import Label
+from stack import Stack, Stack_item
 from re import search, sub
 
 # Class used for interpreting program
@@ -11,7 +12,7 @@ class Program:
     __instructions = list()
     __instructions_pos = 0
     __call_stack = list()
-    __stack = list()
+    __stack = Stack()
     __var_manager = Variable_manager()
     __types = ['int', 'bool', 'nil', 'string', 'float']
     __arithmetic = ['ADD', 'SUB', 'IDIV', 'MUL', 'DIV', 'ADDS', 'SUBS', 'IDIVS', 'MULS']
@@ -62,11 +63,6 @@ class Program:
                 return l
         return None
 
-    def __stack_pop(self):
-        if len(self.__stack) == 0:
-            exit(56)
-        return self.__stack.pop()
-
     @property
     def arithmetics(self):
         return self.__arithmetic
@@ -75,6 +71,37 @@ class Program:
 
     def defvar(self, arg):
         self.__var_manager.add(arg)
+
+    def move(self, src, arg):
+        self.__var_manager.insert_value(src, arg.value, arg.type)
+
+    # FRAMES
+
+    def createframe(self):
+        self.__var_manager.TF_create()
+
+    def pushframe(self):
+        self.__var_manager.TF_push()
+
+    def popframe(self):
+        self.__var_manager.TF_pop()
+
+    # DEBUG
+
+    def dprint(self, value):
+        self.__var_manager.dprint(value)
+
+    def exit(self, value):
+        self.__var_manager.exit(value)
+
+    def type(self, var, symbol):
+        for type in self.__types:
+            if (symbol.type == type):
+                self.__var_manager.insert_value(var, type, 'string')
+        if (symbol.type == 'var'):
+            self.__var_manager.insert_value(var, self.__var_manager.get_type(symbol.value), 'string')
+
+    # INPUT OUTPUT FUNCTIONS
 
     def __escape_sequences(self, string : str):
         escape_re = "\\\\[0-9][0-9][0-9]"
@@ -102,31 +129,6 @@ class Program:
                 result = arg.value
         print(result, end='')
 
-    def move(self, src, arg):
-        self.__var_manager.insert_value(src, arg.value, arg.type)
-
-    def createframe(self):
-        self.__var_manager.TF_create()
-
-    def pushframe(self):
-        self.__var_manager.TF_push()
-
-    def popframe(self):
-        self.__var_manager.TF_pop()
-
-    def dprint(self, value):
-        self.__var_manager.dprint(value)
-
-    def exit(self, value):
-        self.__var_manager.exit(value)
-
-    def type(self, var, symbol):
-        for type in self.__types:
-            if (symbol.type == type):
-                self.__var_manager.insert_value(var, type, 'string')
-        if (symbol.type == 'var'):
-            self.__var_manager.insert_value(var, self.__var_manager.get_type(symbol.value), 'string')
-
     def read(self, var, type, user_input):
         try:
             if (type.value == 'bool'):
@@ -143,6 +145,8 @@ class Program:
         except Exception:
             self.__var_manager.insert_value(var, 'nil', 'nil')
 
+    # JUMP FUNCTIONS
+
     def jump(self, label : Argument):
         if not (label := self.label_find(label.value)):
             exit(52)
@@ -155,102 +159,113 @@ class Program:
     def return_function(self):
         self.__instructions_pos = self.__call_stack.pop()
 
+    # STACK BASIC FUNCTIONS
+
     def pushs(self, arg : Argument) -> None:
         if (arg.type != 'var'):
-            self.__stack.append([arg.value, arg.type])
+            value = arg.value
+            type = arg.type
         else:
-            name = self.__var_manager.get_value(arg.value)
+            value = self.__var_manager.get_value(arg.value)
             type = self.__var_manager.get_type(arg.value)
-            self.__stack.append(name, type)
+        self.__stack.push(value, type)
 
     def pops(self, var : Argument) -> None:
         if (var.type != 'var'):
             exit(56)
-        stack_item = self.__stack_pop()
-        self.__var_manager.insert_value(var, stack_item[0], stack_item[1])
+        stack_item = self.__stack.pop()
+        self.__var_manager.insert_value(var, stack_item.value, stack_item.type)
+
+    # COMPARISON METHODS
+
+    def set_args(self, value1, value2):
+        value1 = self.__literal_or_variable(value1)
+        value2 = self.__literal_or_variable(value2)
+        return (value1,value2)
 
     def jumpifeq(self, instruction):
-        target = instruction[0]
-        (value1,value2) = self.set_args(instruction)
+        target, value1, value2 = instruction
+        (value1,value2) = self.set_args(value1, value2)
         if (value1 == value2):
             self.jump(target)
 
     def jumpifneq(self, instruction):
-        target = instruction[0]
-        (value1,value2) = self.set_args(instruction)
-        if (value1 == value2):
+        target, value1, value2 = instruction
+        (value1,value2) = self.set_args(value1, value2)
+        if (value1 != value2):
             self.jump(target)
 
-    def arithmetic_functions(self, instruction):
-        if instruction.opcode[-1] == 'S':
-            (value1, value2, result_type) = self.set_args_arithmetics_stack()
+    # ARITHMETIC FUNCTIONS
+
+    def __set_args_arithmetics(self, op1, op2):
+        allowed = ['int', 'var', 'float']
+        if op1.type not in allowed or op2.type not in allowed:
+            exit(53)
+
+        value1 = self.__literal_or_variable(op1)
+        value2 = self.__literal_or_variable(op2)
+
+        if type(value1) != type(value2):
+            exit(53)
+
+        if type(value1) is float:
+            result_type = 'float'
         else:
-            var = instruction[0]
-            (value1, value2, result_type) = self.set_args_arithmetics(instruction)
-        if instruction.opcode == 'ADD':
+            result_type = 'int'
+        return (value1,value2, result_type)
+
+    def __set_args_arithmetics_stack(self):
+        allowed = ['int', 'var']
+        value2 = self.__stack.pop()
+        value1 = self.__stack.pop()
+        if value1.type not in allowed or value2.type not in allowed or type(value1.value) != type(value2.value):
+            exit(53)
+        return (value1.value, value2.value, 'int')
+
+    def __arithmetics_stack(self, opcode, value1, value2):
+        if opcode == 'ADDS':
+            self.__stack.push(value1+value2)
+        elif opcode == 'SUBS':
+            self.__stack.push(value1-value2)
+        elif opcode == 'MULS':
+            self.__stack.push(value1*value2)
+        elif opcode == 'IDIVS':
+            if value2 == 0:
+                exit(57)
+            self.__stack.push(value1//value2)
+
+    def __arithmetics_intfloat(self, opcode, var, value1, value2, result_type):
+        if opcode == 'ADD':
             self.__var_manager.insert_value(var, value1+value2, result_type)
-        elif instruction.opcode == 'SUB':
+        elif opcode == 'SUB':
             self.__var_manager.insert_value(var, value1-value2, result_type)
-        elif instruction.opcode == 'MUL':
+        elif opcode == 'MUL':
             self.__var_manager.insert_value(var, value1*value2, result_type)
-        elif instruction.opcode == 'IDIV':
+        elif opcode == 'IDIV':
             if value2 == 0:
                 exit(57)
             self.__var_manager.insert_value(var, value1//value2, result_type)
-        elif instruction.opcode == 'DIV':
+        elif opcode == 'DIV':
             if type(value1) is not float or type(value2) is not float:
                 exit(53)
             if value2 == 0:
                 exit(57)
             self.__var_manager.insert_value(var, value1//value2, result_type)
-        elif instruction.opcode == 'ADDS':
-            self.__stack.append([value1[0]+value2[0], 'int'])
-        elif instruction.opcode == 'SUBS':
-            self.__stack.append([value1[0]-value2[0], 'int'])
-        elif instruction.opcode == 'MULS':
-            self.__stack.append([value1[0]*value2[0], 'int'])
-        elif instruction.opcode == 'IDIVS':
-            self.__stack.append([value1[0]//value2[0], 'int'])
-            if value2 == 0:
-                exit(57)
+
+    def arithmetic_functions(self, instruction):
+        if instruction.opcode[-1] == 'S':
+            (value1, value2, result_type) = self.__set_args_arithmetics_stack()
+            self.__arithmetics_stack(instruction.opcode, value1, value2)
+        else:
+            var, operand1, operand2 = instruction
+            (value1, value2, result_type) = self.__set_args_arithmetics(operand1, operand2)
+            self.__arithmetics_intfloat(instruction.opcode, var, value1, value2, result_type)
 
     def __literal_or_variable(self, operand):
             if (operand.type == 'var'):
                 return self.__var_manager.get_value(operand.value)
             else:
                 return operand.value
-
-    def set_args(self, instruction):
-        value1 = self.__literal_or_variable(instruction[1])
-        value2 = self.__literal_or_variable(instruction[2])
-        return (value1,value2)
-
-    def set_args_arithmetics(self, instruction):
-        op1 = instruction[1]
-        op2 = instruction[2]
-        allowed = ['int', 'var', 'float']
-        if op1.type not in allowed or op2.type not in allowed:
-            exit(53)
-
-        value1 = self.__literal_or_variable(instruction[1])
-        value2 = self.__literal_or_variable(instruction[2])
-
-        if type(value1) != type(value2):
-            exit(53)
-
-        if type(value1) is float or type(value2) is float:
-            result_type = 'float'
-        else:
-            result_type = 'int'
-        return (value1,value2, result_type)
-
-    def set_args_arithmetics_stack(self):
-        allowed = ['int', 'var']
-        value2 = self.__stack_pop()
-        value1 = self.__stack_pop()
-        if value1[1] not in allowed or value2[1] not in allowed or type(value1[0]) != type(value2[0]):
-            exit(53)
-        return (value1,value2, 'int')
 
     # CONVERSION METHODS
 
@@ -289,3 +304,55 @@ class Program:
             self.__var_manager.insert_value(dst, ord(val), 'int')
         except Exception:
             exit(58)
+
+    def __pre_conversion_stack(self, value, desired_type):
+        if value == None:
+            exit(56)
+        elif type(value) is not desired_type:
+            exit(53)
+        return value
+
+    def stri2ints(self):
+        val = self.__stack.pop()
+        dest = self.__stack.pop()
+        val = self.__pre_conversion_stack(val.value, int)
+        try:
+            self.__stack.push(ord(dest.value[val]), 'int')
+        except Exception:
+            exit(58)
+
+    def concat(self, dest, str1, str2):
+        str1 = self.__literal_or_variable(str1)
+        str2 = self.__literal_or_variable(str2)
+        if (type(str1) is not str or type(str2) is not str):
+            exit(53)
+        self.__var_manager.insert_value(dest, str1+str2, 'string')
+
+    def strlen(self, dest, string):
+        string = self.__literal_or_variable(string)
+        if (type(string) is not str):
+            exit(53)
+        self.__var_manager.insert_value(dest, len(string), 'int')
+
+    def getchar(self, dest, string, pos):
+        string = self.__literal_or_variable(string)
+        pos = self.__literal_or_variable(pos)
+        if (type(string) is not str or type(pos) is not int):
+            exit(53)
+        try:
+            self.__var_manager.insert_value(dest, string[pos], 'string')
+            if (pos < 0):
+                raise IndexError
+        except IndexError:
+            exit(58)
+
+    def setchar(self, dest, pos, new_symbol):
+        dest_string = list(self.__var_manager.get_value(dest.value))
+        pos = self.__literal_or_variable(pos)
+        new_symbol = self.__literal_or_variable(new_symbol)
+        try:
+            pos = int(pos)
+            dest_string[pos] = new_symbol[0]
+        except Exception:
+            exit(58)
+        self.__var_manager.insert_value(dest, ''.join(dest_string), 'string')

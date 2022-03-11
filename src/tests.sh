@@ -14,6 +14,8 @@ JEXAMXML_OPT_PATH="$TESTS"
 
 INTERPRET_TESTS="$TESTS/interpret-only"
 
+BOTH_TESTS="$TESTS/both"
+
 declare -i TEST_COUNT=0
 declare -i TEST_PASSED=0
 
@@ -106,6 +108,59 @@ function interpret_test()
     done
 }
 
+function both_test()
+{
+    echo -e "${ORANGE}BOTH${NC}"
+    for DIR in $(ls $BOTH_TESTS)
+    do
+        echo -e "  ${CYAN}$DIR${NC}"
+        for TEST_NAME in $(ls $BOTH_TESTS/$DIR | grep ".src")
+        do
+            TEST_COUNT+=1
+            TEST_NAME=${TEST_NAME%.*}
+            #echo -e -n "\t${BLUE}$TEST_NAME:${NC}"
+
+            src=$BOTH_TESTS/$DIR/$TEST_NAME'.src'
+            input=$BOTH_TESTS/$DIR/$TEST_NAME'.in'
+
+            php8.1 parser/parse.php < $src > xml
+            if [ -f $input ]; then
+                python3 interpret/interpret.py --source='xml' --input=$input > tmp 2>/dev/null
+            else
+                python3 interpret/interpret.py --source='xml' > tmp
+            fi
+            RETVAL=$?
+            rc="$BOTH_TESTS/$DIR/$TEST_NAME.rc"
+            if [ -f "$rc" ]; then
+                RETVAL_EXPECTED=$(cat "$rc")
+            else
+                RETVAL_EXPECTED='0'
+            fi
+            # check if return codes match
+            if [ $RETVAL != $RETVAL_EXPECTED ]; then
+                echo -e -n "\t${BLUE}$TEST_NAME:${NC}"
+                echo -e " ${RED}FAILED${NC}"
+            else
+                if [ $RETVAL != 0 ]; then
+                    # error occured, no need to check output
+                    TEST_PASSED+=1
+                    #echo -e " ${GREEN}PASSED${NC}"
+                else
+                    diff $INTERPRET_TESTS/$DIR/$TEST_NAME.'out' tmp >/dev/null
+                    if [ $? -eq 0 ]; then
+                        TEST_PASSED+=1
+                        #echo -e " ${GREEN}PASSED${NC}"
+                    else
+                        echo -e -n "\t${BLUE}$TEST_NAME:${NC}"
+                        echo -e " ${RED}FAILED${NC}"
+                    fi
+                fi
+            fi
+
+        done
+    done
+}
+
 
 if [ -z $1 ]; then
     parser_test
@@ -114,6 +169,8 @@ elif [ $1 == 'parser' ]; then
     parser_test
 elif [ $1 == 'interpret' ]; then
     interpret_test
+elif [ $1 == 'both' ]; then
+    both_test
 fi
 
 echo "Passed" $TEST_PASSED "tests out of" $TEST_COUNT

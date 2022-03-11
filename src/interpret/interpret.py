@@ -73,6 +73,16 @@ while instruction := program.get_instruction():
         program.int2char(instruction[0], instruction[1])
     elif (opcode == 'STRI2INT'):
         program.stri2int(instruction[0], instruction[1])
+    elif (opcode == 'STRI2INTS'):
+        program.stri2ints()
+    elif (opcode == 'CONCAT'):
+        program.concat(instruction[0], instruction[1], instruction[2])
+    elif (opcode == 'STRLEN'):
+        program.strlen(instruction[0], instruction[1])
+    elif (opcode == 'GETCHAR'):
+        program.getchar(instruction[0], instruction[1], instruction[2])
+    elif (opcode == 'SETCHAR'):
+        program.setchar(instruction[0], instruction[1], instruction[2])
     elif (opcode == 'LABEL'):
         pass
     else:
