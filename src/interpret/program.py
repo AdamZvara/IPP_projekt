@@ -157,7 +157,10 @@ class Program:
         self.jump(label)
 
     def return_function(self):
-        self.__instructions_pos = self.__call_stack.pop()
+        if (len(self.__call_stack) > 0):
+            self.__instructions_pos = self.__call_stack.pop()
+        else:
+            exit(56)
 
     # STACK BASIC FUNCTIONS
 
