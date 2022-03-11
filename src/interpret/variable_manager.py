@@ -26,7 +26,7 @@ class Variable_manager():
     # Return variable object with given name otherwise return None
     def find(self, name : str) -> Variable:
         frame = name[:2]
-        if (frame == 'TF') and not self.__temp_frame_active:
+        if (frame == 'TF' and not self.__temp_frame_active) or (frame == 'LF' and len(self.__local_frames_stack) == 0):
             exit(55)
         for var in self.__frames[frame]:
             if (var.name == name[3:]):
