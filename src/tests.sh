@@ -131,8 +131,8 @@ function both_test()
             fi
             RETVAL=$?
             rc="$BOTH_TESTS/$DIR/$TEST_NAME.rc"
-            if [ -f "$rc" ]; then
-                RETVAL_EXPECTED=$(cat "$rc")
+            if [ -f $rc ]; then
+                RETVAL_EXPECTED=$(cat $rc)
             else
                 RETVAL_EXPECTED='0'
             fi
@@ -146,7 +146,7 @@ function both_test()
                     TEST_PASSED+=1
                     #echo -e " ${GREEN}PASSED${NC}"
                 else
-                    diff $INTERPRET_TESTS/$DIR/$TEST_NAME.'out' tmp >/dev/null
+                    diff $BOTH_TESTS/$DIR/$TEST_NAME.'out' tmp >/dev/null
                     if [ $? -eq 0 ]; then
                         TEST_PASSED+=1
                         #echo -e " ${GREEN}PASSED${NC}"
