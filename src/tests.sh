@@ -161,6 +161,65 @@ function both_test()
     done
 }
 
+PARSER_BONUS="$TESTS/parser_bonus"
+
+function parser_bonus()
+{
+    echo -e "${ORANGE}PARSER-BONUS${NC}"
+
+    for TEST_NAME in $(ls $PARSER_BONUS | grep ".run")
+        do
+            echo -e -n "\t${BLUE}$TEST_NAME:${NC}\n"
+            while read -r line; do
+                echo -e -n "\t\t$line:"
+                TEST_COUNT+=1
+                TEST_NAME=${TEST_NAME%.*}
+
+                valid=$(echo $TEST_NAME | grep valid)
+                empty=$(echo $TEST_NAME | grep empty)
+                if [ $valid ]; then
+                    php8.1 parser/parse.php $line < "$PARSER_BONUS/$TEST_NAME.in" >/dev/null
+                else
+                    php8.1 parser/parse.php $line > tmp
+                fi
+
+                RETVAL=$?
+                RETVAL_EXPECTED=$(cat "$PARSER_BONUS/$TEST_NAME.rc")
+
+                # check if return codes match
+                if [ $RETVAL != $RETVAL_EXPECTED ]; then
+                    echo -e " ${RED}FAILED${NC}"
+                else
+                    if [ $RETVAL != 0 ]; then
+                        # error occured, no need to check output
+                        TEST_PASSED+=1
+                        echo -e " ${GREEN}PASSED${NC}"
+                    else
+                        if [ "$valid" = 'valid' ]; then
+                            diff "$PARSER_BONUS/$TEST_NAME.out" file -E -B >/dev/null
+                        elif [ "$valid" = 'valid2' ]; then
+                            diff "$PARSER_BONUS/$TEST_NAME.out1" file -E -B >/dev/null
+                            a=$?
+                            diff "$PARSER_BONUS/$TEST_NAME.out2" file2 -E -B >/dev/null
+                            b=$?
+                            [ $((a-b)) == 0 ]
+                        elif [ "$empty" ]; then
+                            touch file
+                            diff "$PARSER_BONUS/$TEST_NAME.out" file -E -B >/dev/null
+                        else
+                            diff "$PARSER_BONUS/$TEST_NAME.out" tmp -E -B >/dev/null
+                        fi
+                        if [ $? -eq 0 ]; then
+                            TEST_PASSED+=1
+                            echo -e " ${GREEN}PASSED${NC}"
+                        else
+                            echo -e " ${RED}FAILED${NC}"
+                        fi
+                    fi
+                fi
+            done < "$PARSER_BONUS/$TEST_NAME";
+        done
+}
 
 if [ -z $1 ]; then
     parser_test
@@ -171,8 +230,11 @@ elif [ $1 == 'interpret' ]; then
     interpret_test
 elif [ $1 == 'both' ]; then
     both_test
+elif [ $1 == 'pbonus' ]; then
+    parser_bonus
 fi
 
 echo "Passed" $TEST_PASSED "tests out of" $TEST_COUNT
 
 rm -rf tmp*
+rm -rf file*
