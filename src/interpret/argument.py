@@ -1,5 +1,6 @@
 # Argument class which contains argument type (var, int, string ...)
 # and text (actual data)
+
 class Argument:
     def __init__(self, argument) -> None:
         self.type = argument.attrib['type']
@@ -7,6 +8,8 @@ class Argument:
             self.value = self.__to_int__(argument.text)
         elif self.type == 'float':
             self.value = self.__to_float__(argument.text)
+        elif self.type == 'string' and argument.text is None:
+            self.value = ''
         else:
             self.value = argument.text
         self.order = int(argument.tag[3:]) # for ordering arguments within instruction
