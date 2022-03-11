@@ -269,7 +269,10 @@ class Program:
 
     def __literal_or_variable(self, operand):
             if (operand.type == 'var'):
-                return self.__var_manager.get_value(operand.value), self.__var_manager.get_type(operand.value)
+                value = self.__var_manager.get_value(operand.value)
+                type = self.__var_manager.get_type(operand.value)
+                if (value == None):
+                    exit(56)
             else:
                 return operand.value, operand.type
 
@@ -279,33 +282,33 @@ class Program:
         val, val_t = self.__literal_or_variable(value)
         if val == None:
             exit(56)
-        elif val_t is not desired_type:
+        elif val_t != desired_type:
             exit(53)
         return val
 
     def float2int(self, dst, value):
-        val = self.__pre_conversion(value, float)
+        val = self.__pre_conversion(value, 'float')
         try:
             self.__var_manager.insert_value(dst, int(val), 'int')
         except Exception:
             exit(58)
 
     def int2float(self, dst, value):
-        val = self.__pre_conversion(value, int)
+        val = self.__pre_conversion(value, 'int')
         try:
             self.__var_manager.insert_value(dst, float(val), 'float')
         except Exception:
             exit(58)
 
     def int2char(self, dst, value):
-        val = self.__pre_conversion(value, int)
+        val = self.__pre_conversion(value, 'int')
         try:
             self.__var_manager.insert_value(dst, chr(val), 'char')
         except Exception:
             exit(58)
 
     def stri2int(self, dst, value):
-        val = self.__pre_conversion(value, str)
+        val = self.__pre_conversion(value, 'string')
         try:
             self.__var_manager.insert_value(dst, ord(val), 'int')
         except Exception:
@@ -335,15 +338,15 @@ class Program:
         self.__var_manager.insert_value(dest, str1+str2, 'string')
 
     def strlen(self, dest, string):
-        string = self.__literal_or_variable(string)
-        if (type(string) is not str):
+        string, string_t = self.__literal_or_variable(string)
+        if (string_t != 'string'):
             exit(53)
         self.__var_manager.insert_value(dest, len(string), 'int')
 
     def getchar(self, dest, string, pos):
-        string = self.__literal_or_variable(string)
-        pos = self.__literal_or_variable(pos)
-        if (type(string) is not str or type(pos) is not int):
+        string, string_t = self.__literal_or_variable(string)
+        pos, pos_t = self.__literal_or_variable(pos)
+        if (string_t != 'string' or pos_t != 'int'):
             exit(53)
         try:
             self.__var_manager.insert_value(dest, string[pos], 'string')
@@ -354,8 +357,12 @@ class Program:
 
     def setchar(self, dest, pos, new_symbol):
         dest_string = list(self.__var_manager.get_value(dest.value))
-        pos = self.__literal_or_variable(pos)
-        new_symbol = self.__literal_or_variable(new_symbol)
+        pos, pos_t = self.__literal_or_variable(pos)
+        new_symbol, ns_t = self.__literal_or_variable(new_symbol)
+
+        if (pos_t != 'int' or ns_t != 'string'):
+            exit(53)
+
         try:
             pos = int(pos)
             dest_string[pos] = new_symbol[0]
