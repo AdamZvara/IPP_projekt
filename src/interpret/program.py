@@ -182,8 +182,8 @@ class Program:
     # COMPARISON METHODS
 
     def set_args(self, value1, value2):
-        value1 = self.__literal_or_variable(value1)
-        value2 = self.__literal_or_variable(value2)
+        value1, _ = self.__literal_or_variable(value1)
+        value2, _ = self.__literal_or_variable(value2)
         return (value1,value2)
 
     def jumpifeq(self, instruction):
@@ -205,17 +205,20 @@ class Program:
         if op1.type not in allowed or op2.type not in allowed:
             exit(53)
 
-        value1 = self.__literal_or_variable(op1)
-        value2 = self.__literal_or_variable(op2)
+        val1, val1_t = self.__literal_or_variable(op1)
+        val2, val2_t = self.__literal_or_variable(op2)
 
-        if type(value1) != type(value2):
+        if (val1 == None or val2 == None):
+            exit(56)
+
+        if val1_t != val2_t:
             exit(53)
 
-        if type(value1) is float:
+        if type(val1) is float:
             result_type = 'float'
         else:
             result_type = 'int'
-        return (value1,value2, result_type)
+        return (val1,val2, result_type)
 
     def __set_args_arithmetics_stack(self):
         allowed = ['int', 'var']
@@ -266,17 +269,17 @@ class Program:
 
     def __literal_or_variable(self, operand):
             if (operand.type == 'var'):
-                return self.__var_manager.get_value(operand.value)
+                return self.__var_manager.get_value(operand.value), self.__var_manager.get_type(operand.value)
             else:
-                return operand.value
+                return operand.value, operand.type
 
     # CONVERSION METHODS
 
     def __pre_conversion(self, value, desired_type):
-        val = self.__literal_or_variable(value)
+        val, val_t = self.__literal_or_variable(value)
         if val == None:
             exit(56)
-        elif type(val) is not desired_type:
+        elif val_t is not desired_type:
             exit(53)
         return val
 
@@ -325,9 +328,9 @@ class Program:
             exit(58)
 
     def concat(self, dest, str1, str2):
-        str1 = self.__literal_or_variable(str1)
-        str2 = self.__literal_or_variable(str2)
-        if (type(str1) is not str or type(str2) is not str):
+        str1, str1_t = self.__literal_or_variable(str1)
+        str2, str2_t = self.__literal_or_variable(str2)
+        if (str1_t != 'string' or str2_t != 'string'):
             exit(53)
         self.__var_manager.insert_value(dest, str1+str2, 'string')
 
