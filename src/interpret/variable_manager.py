@@ -8,6 +8,7 @@ class Variable_manager():
         self.__frames = dict({'GF':list(), 'TF':list(), 'LF':list()})
         self.__local_frames_stack = list()
         self.__temp_frame_active = False
+        self.__local_frame_active = False
 
     # Append new variable object into self.frames based on given
     # variable name
@@ -26,7 +27,7 @@ class Variable_manager():
     # Return variable object with given name otherwise return None
     def find(self, name : str) -> Variable:
         frame = name[:2]
-        if (frame == 'TF' and not self.__temp_frame_active) or (frame == 'LF' and len(self.__local_frames_stack) == 0):
+        if (frame == 'TF' and not self.__temp_frame_active) or (frame == 'LF' and self.__local_frame_active == False):
             exit(55)
         for var in self.__frames[frame]:
             if (var.name == name[3:]):
@@ -93,6 +94,7 @@ class Variable_manager():
             arg.frame = 'LF'
         self.__frames.update({'TF':list()})
         self.__temp_frame_active = False
+        self.__local_frame_active = True
 
     # Move active local frame into temporary frame, pop frame
     # from local frames stack and place its variables in local frame
