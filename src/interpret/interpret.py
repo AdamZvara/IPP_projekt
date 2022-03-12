@@ -85,6 +85,10 @@ while instruction := program.get_instruction():
         program.setchar(instruction[0], instruction[1], instruction[2])
     elif (opcode == 'AND'):
         program.andfunction(instruction[0], instruction[1], instruction[2])
+    elif (opcode == 'OR'):
+        program.orfunction(instruction[0], instruction[1], instruction[2])
+    elif (opcode == 'NOT'):
+        program.notfunction(instruction[0], instruction[1])
     elif (opcode == 'EQ'):
         program.eq(instruction[0], instruction[1], instruction[2])
     elif (opcode == 'GT'):

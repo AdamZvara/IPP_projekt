@@ -5,9 +5,9 @@ class Instruction:
     __instructions = {('CREATEFRAME', 'PUSHFRAME', 'POPFRAME', 'RETURN', 'BREAK') : 0,
                       ('DEFVAR', 'LABEL', 'WRITE', 'CALL', 'PUSHS', 'POPS', 'JUMP',
                        'EXIT', 'DPRINT') : 1,
-                      ('MOVE', 'READ', 'INT2CHAR', 'STRLEN', 'TYPE') : 2,
+                      ('MOVE', 'READ', 'INT2CHAR', 'STRLEN', 'TYPE', 'NOT') : 2,
                       ('ADD', 'SUB', 'MUL', 'IDIV', 'LT', 'GT', 'EQ', 'AND',
-                       'OR', 'NOT', 'STR2INT', 'CONCAT', 'GETCHAR', 'SETCHAR',
+                       'OR', 'STR2INT', 'CONCAT', 'GETCHAR', 'SETCHAR',
                        'JUMPIFEQ', 'JUMPIFNEQ') : 3}
 
     def __init__(self, opcode : str, order : str) -> None:

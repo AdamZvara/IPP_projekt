@@ -395,6 +395,23 @@ class Program:
 
         self.__var_manager.insert_value(dest, bool1 and bool2, 'bool')
 
+    def orfunction(self, dest, bool1, bool2):
+        bool1, bool1_t = self.__literal_or_variable(bool1)
+        bool2, bool2_t = self.__literal_or_variable(bool2)
+
+        if bool1_t != 'bool' or bool2_t != 'bool':
+            exit(53)
+
+        self.__var_manager.insert_value(dest, bool1 or bool2, 'bool')
+
+    def notfunction(self, dest, bool1):
+        bool1, bool1_t = self.__literal_or_variable(bool1)
+
+        if bool1_t != 'bool':
+            exit(53)
+
+        self.__var_manager.insert_value(dest,  not bool1, 'bool')
+
     # COMPARISONS
 
     def __pre_comparison(self, value1, value2):
