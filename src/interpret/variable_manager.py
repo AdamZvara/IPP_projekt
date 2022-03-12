@@ -104,12 +104,16 @@ class Variable_manager():
     # Move active local frame into temporary frame, pop frame
     # from local frames stack and place its variables in local frame
     def TF_pop(self):
-        if len(self.__local_frames_stack) == 0:
+        if self.__local_frame_active == False:
             exit(55)
-        LF_stack_top = self.__local_frames_stack.pop()
         self.__frames.update({'TF': self.__frames['LF']})
+        if len(self.__local_frames_stack) > 0:
+            LF_stack_top = self.__local_frames_stack.pop()
+        else:
+            LF_stack_top = list()
+            self.__local_frame_active = False
         self.__frames.update({'LF': LF_stack_top})
-        for arg in self.__frames['LF']:
+        for arg in self.__frames['TF']:
             arg.frame = 'TF'
         self.__temp_frame_active = True
 
