@@ -140,8 +140,16 @@ class Program:
                 result = arg.value
         print(result, end='')
 
+    def readcheck(self, var, type):
+        # check if variable exists
+        self.__var_manager.get_value(var.value)
+        if type.value not in ['int', 'string', 'bool', 'float']:
+            exit(53)
+
     def read(self, var, type, user_input):
         try:
+            if (user_input == None):
+                raise Exception
             if (type.value == 'bool'):
                 if (user_input.lower() == 'true'):
                     self.__var_manager.insert_value(var, True, 'bool')

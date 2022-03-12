@@ -40,7 +40,10 @@ class Input:
     # return single line from input
     def get_input_line(self):
         if self.__input is None:
-            return input()
+            try:
+                return input()
+            except EOFError:
+                return None
         line = self.__input.readline().rstrip('\n') # get line and remove trailing newline
         return line
 

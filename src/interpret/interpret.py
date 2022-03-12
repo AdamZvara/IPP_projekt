@@ -59,6 +59,7 @@ while instruction := program.get_instruction():
     elif (opcode == 'RETURN'):
         program.return_function()
     elif (opcode == 'READ'):
+        program.readcheck(instruction[0], instruction[1])
         user_input = input_files.get_input_line()
         program.read(instruction[0], instruction[1], user_input)
     elif (opcode == 'PUSHS'):
