@@ -73,7 +73,8 @@ class Program:
         self.__var_manager.add(arg)
 
     def move(self, src, arg):
-        self.__var_manager.insert_value(src, arg.value, arg.type)
+        arg, arg_t = self.__literal_or_variable(arg)
+        self.__var_manager.insert_value(src, arg, arg_t)
 
     # FRAMES
 
@@ -314,7 +315,7 @@ class Program:
     def int2char(self, dst, value):
         val = self.__pre_conversion(value, 'int')
         try:
-            self.__var_manager.insert_value(dst, chr(val), 'char')
+            self.__var_manager.insert_value(dst, chr(val), 'string')
         except Exception:
             exit(58)
 
@@ -394,18 +395,31 @@ class Program:
 
     # COMPARISONS
 
-    def eq(self, dest, value1, value2):
+    def __pre_comparison(self, value1, value2):
         value1, value1_t = self.__literal_or_variable(value1)
         value2, value2_t = self.__literal_or_variable(value2)
-
-
-        if value1_t != 'nil' and value2_t != 'nil':
-            if value1_t != value2_t:
-                exit(53)
-
         if (value1_t == 'string'):
             value1 = self.__escape_sequences(value1)
         if (value2_t == 'string'):
             value2 = self.__escape_sequences(value2)
+        return value1, value1_t, value2, value2_t
 
+
+    def eq(self, dest, value1, value2):
+        value1, value1_t, value2, value2_t = self.__pre_comparison(value1, value2)
+        if value1_t != 'nil' and value2_t != 'nil':
+            if value1_t != value2_t:
+                exit(53)
         self.__var_manager.insert_value(dest, value1 == value2, 'bool')
+
+    def gt(self, dest, value1, value2):
+        value1, value1_t, value2, value2_t = self.__pre_comparison(value1, value2)
+        if value1_t == 'nil' or value2_t == 'nil' or value1_t != value2_t:
+            exit(53)
+        self.__var_manager.insert_value(dest, value1 > value2, 'bool')
+
+    def lt(self, dest, value1, value2):
+        value1, value1_t, value2, value2_t = self.__pre_comparison(value1, value2)
+        if value1_t == 'nil' or value2_t == 'nil' or value1_t != value2_t:
+            exit(53)
+        self.__var_manager.insert_value(dest, value1 < value2, 'bool')

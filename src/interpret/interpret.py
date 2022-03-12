@@ -87,6 +87,8 @@ while instruction := program.get_instruction():
         program.andfunction(instruction[0], instruction[1], instruction[2])
     elif (opcode == 'EQ'):
         program.eq(instruction[0], instruction[1], instruction[2])
+    elif (opcode == 'GT'):
+        program.gt(instruction[0], instruction[1], instruction[2])
     elif (opcode == 'LABEL'):
         pass
     else:
