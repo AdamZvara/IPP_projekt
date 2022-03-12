@@ -111,11 +111,10 @@ class Program:
 
     def __escape_sequences(self, string : str):
         escape_re = "\\\\[0-9][0-9][0-9]"
-        matches = search(escape_re, string)
-        if matches != None:
-            for escape in matches.regs:
-                escaped = chr(int(string[escape[0]+1:escape[1]]))
-                string = sub(escape_re, escaped, string)
+        while (matches := search(escape_re, string)) != None:
+            escape = matches.regs[0]
+            escaped = chr(int(string[escape[0]+1:escape[1]]))
+            string = string[:escape[0]] + escaped + string[escape[1]:]
         return string
 
     def print(self, arg):
@@ -190,6 +189,8 @@ class Program:
         else:
             value = self.__var_manager.get_value(arg.value)
             type = self.__var_manager.get_type(arg.value)
+        if value == None:
+            exit(56)
         self.__stack.push(value, type)
 
     def pops(self, var : Argument) -> None:
@@ -329,10 +330,13 @@ class Program:
         except Exception:
             exit(58)
 
-    def stri2int(self, dst, value):
+    def stri2int(self, dst, value, pos):
         val = self.__pre_conversion(value, 'string')
+        pos = self.__pre_conversion(pos, 'int')
         try:
-            self.__var_manager.insert_value(dst, ord(val), 'int')
+            if (pos < 0):
+                raise Exception
+            self.__var_manager.insert_value(dst, ord(val[pos]), 'int')
         except Exception:
             exit(58)
 
@@ -378,6 +382,10 @@ class Program:
             exit(58)
 
     def setchar(self, dest, pos, new_symbol):
+        if (self.__var_manager.get_value(dest.value) == None):
+            exit(56)
+        if (self.__var_manager.get_type(dest.value) != 'string'):
+            exit(53)
         dest_string = list(self.__var_manager.get_value(dest.value))
         pos, pos_t = self.__literal_or_variable(pos)
         new_symbol, ns_t = self.__literal_or_variable(new_symbol)
@@ -385,11 +393,15 @@ class Program:
         if (pos_t != 'int' or ns_t != 'string'):
             exit(53)
 
-        try:
-            pos = int(pos)
-            dest_string[pos] = new_symbol[0]
-        except Exception:
+        new_symbol = self.__escape_sequences(new_symbol)
+
+        if (pos_t != 'int' or ns_t != 'string'):
+            exit(53)
+
+        pos = int(pos)
+        if (pos < 0 or pos >= len(dest_string) or len(new_symbol) == 0):
             exit(58)
+        dest_string[pos] = new_symbol[0]
         self.__var_manager.insert_value(dest, ''.join(dest_string), 'string')
 
     # LOGIC FUNCTIONS

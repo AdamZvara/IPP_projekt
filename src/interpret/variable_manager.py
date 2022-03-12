@@ -70,6 +70,8 @@ class Variable_manager():
             else:
                 result='false'
         else:
+            if (var.value == None):
+                exit(56)
             result = var.value
         return result, var.type
 

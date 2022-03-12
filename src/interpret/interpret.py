@@ -73,7 +73,7 @@ while instruction := program.get_instruction():
     elif (opcode == 'INT2CHAR'):
         program.int2char(instruction[0], instruction[1])
     elif (opcode == 'STRI2INT'):
-        program.stri2int(instruction[0], instruction[1])
+        program.stri2int(instruction[0], instruction[1], instruction[2])
     elif (opcode == 'STRI2INTS'):
         program.stri2ints()
     elif (opcode == 'CONCAT'):
