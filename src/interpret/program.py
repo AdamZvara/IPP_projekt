@@ -91,8 +91,13 @@ class Program:
     def dprint(self, value):
         self.__var_manager.dprint(value)
 
-    def exit(self, value):
-        self.__var_manager.exit(value)
+    def exit(self, arg):
+        value, value_t = self.__literal_or_variable(arg)
+        if (value_t != 'int'):
+            exit(53)
+        if value < 0 or value > 49:
+                exit(57)
+        exit(value)
 
     def type(self, var, symbol):
         for type in self.__types:

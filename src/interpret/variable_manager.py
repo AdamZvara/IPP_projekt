@@ -116,14 +116,3 @@ class Variable_manager():
         for arg in self.__frames['TF']:
             arg.frame = 'TF'
         self.__temp_frame_active = True
-
-    def exit(self, arg : Argument) -> None:
-        if (arg.type == 'var'):
-            if not (var := self.find(arg.value)):
-                exit(54)
-            value = var.value
-        else:
-            value = arg.value
-        if value < 0 or value > 49:
-                exit(57)
-        exit(value)
