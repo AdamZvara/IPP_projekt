@@ -192,20 +192,22 @@ class Program:
 
     # COMPARISON METHODS
 
-    def set_args(self, value1, value2):
-        value1, _ = self.__literal_or_variable(value1)
-        value2, _ = self.__literal_or_variable(value2)
+    def __set_args(self, value1, value2):
+        value1, value1_t, value2, value2_t = self.__pre_comparison(value1, value2)
+        if value1_t != 'nil' and value2_t != 'nil':
+            if value1_t != value2_t:
+                exit(53)
         return (value1,value2)
 
     def jumpifeq(self, instruction):
         target, value1, value2 = instruction
-        (value1,value2) = self.set_args(value1, value2)
+        (value1,value2) = self.__set_args(value1, value2)
         if (value1 == value2):
             self.jump(target)
 
     def jumpifneq(self, instruction):
         target, value1, value2 = instruction
-        (value1,value2) = self.set_args(value1, value2)
+        (value1,value2) = self.__set_args(value1, value2)
         if (value1 != value2):
             self.jump(target)
 

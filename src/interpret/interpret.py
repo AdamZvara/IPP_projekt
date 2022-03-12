@@ -89,6 +89,8 @@ while instruction := program.get_instruction():
         program.eq(instruction[0], instruction[1], instruction[2])
     elif (opcode == 'GT'):
         program.gt(instruction[0], instruction[1], instruction[2])
+    elif (opcode == 'LT'):
+        program.lt(instruction[0], instruction[1], instruction[2])
     elif (opcode == 'LABEL'):
         pass
     else:
