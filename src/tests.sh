@@ -232,6 +232,11 @@ elif [ $1 == 'both' ]; then
     both_test
 elif [ $1 == 'pbonus' ]; then
     parser_bonus
+elif [ $1 == 's' ]; then
+    php8.1 parser/parse.php < prog > prog2
+    python3 interpret/interpret.py --source=prog2
+    echo $?
+    exit 0
 fi
 
 echo "Passed" $TEST_PASSED "tests out of" $TEST_COUNT

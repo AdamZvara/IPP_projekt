@@ -125,6 +125,11 @@ class Program:
                 result = float.hex(arg.value)
             elif (arg.type == 'nil'):
                 result = ''
+            elif arg.type == 'bool':
+                if arg.value == True:
+                    result='true'
+                else:
+                    result='false'
             else:
                 result = arg.value
         print(result, end='')
@@ -133,9 +138,9 @@ class Program:
         try:
             if (type.value == 'bool'):
                 if (user_input.lower() == 'true'):
-                    self.__var_manager.insert_value(var, 'true', 'bool')
+                    self.__var_manager.insert_value(var, True, 'bool')
                 else:
-                    self.__var_manager.insert_value(var, 'false', 'bool')
+                    self.__var_manager.insert_value(var, False, 'bool')
             elif (type.value == 'int'):
                 self.__var_manager.insert_value(var, int(user_input), 'int')
             elif (type.value == 'string'):
@@ -270,9 +275,10 @@ class Program:
     def __literal_or_variable(self, operand):
             if (operand.type == 'var'):
                 value = self.__var_manager.get_value(operand.value)
-                type = self.__var_manager.get_type(operand.value)
+                value_type = self.__var_manager.get_type(operand.value)
                 if (value == None):
                     exit(56)
+                return value, value_type
             else:
                 return operand.value, operand.type
 
@@ -369,3 +375,26 @@ class Program:
         except Exception:
             exit(58)
         self.__var_manager.insert_value(dest, ''.join(dest_string), 'string')
+
+    # LOGIC FUNCTIONS
+
+    def andfunction(self, dest, bool1, bool2):
+        bool1, bool1_t = self.__literal_or_variable(bool1)
+        bool2, bool2_t = self.__literal_or_variable(bool2)
+
+        if bool1_t != 'bool' or bool2_t != 'bool':
+            exit(53)
+
+        self.__var_manager.insert_value(dest, bool1 and bool2, 'bool')
+
+    # COMPARISONS
+
+    def eq(self, dest, value1, value2):
+        value1, value1_t = self.__literal_or_variable(value1)
+        value2, value2_t = self.__literal_or_variable(value2)
+
+        if value1_t != 'nil' and value2_t != 'nil':
+            if value1_t != value2_t:
+                exit(53)
+
+        self.__var_manager.insert_value(dest, value1 == value2, 'bool')

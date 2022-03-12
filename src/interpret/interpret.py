@@ -83,6 +83,10 @@ while instruction := program.get_instruction():
         program.getchar(instruction[0], instruction[1], instruction[2])
     elif (opcode == 'SETCHAR'):
         program.setchar(instruction[0], instruction[1], instruction[2])
+    elif (opcode == 'AND'):
+        program.andfunction(instruction[0], instruction[1], instruction[2])
+    elif (opcode == 'EQ'):
+        program.eq(instruction[0], instruction[1], instruction[2])
     elif (opcode == 'LABEL'):
         pass
     else:

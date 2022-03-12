@@ -64,6 +64,11 @@ class Variable_manager():
             result = float.hex(var.value)
         elif var.type == 'nil':
             result = ''
+        elif var.type == 'bool':
+            if (var.value == True):
+                result='true'
+            else:
+                result='false'
         else:
             result = var.value
         return result, var.type

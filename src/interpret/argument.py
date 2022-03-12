@@ -10,6 +10,8 @@ class Argument:
             self.value = self.__to_float__(argument.text)
         elif self.type == 'string' and argument.text is None:
             self.value = ''
+        elif self.type == 'bool':
+            self.value = self.__to_bool__(argument.text)
         else:
             self.value = argument.text
         self.order = int(argument.tag[3:]) # for ordering arguments within instruction
@@ -25,6 +27,12 @@ class Argument:
             return float.fromhex(value)
         except ValueError:
             exit(32)
+
+    def __to_bool__(self, value):
+        if (value == 'true'):
+            return True
+        else:
+            return False
 
     def __eq__(self, other) -> bool:
         if (self.type != 'nil' and other.type != 'nil'):
