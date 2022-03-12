@@ -393,8 +393,14 @@ class Program:
         value1, value1_t = self.__literal_or_variable(value1)
         value2, value2_t = self.__literal_or_variable(value2)
 
+
         if value1_t != 'nil' and value2_t != 'nil':
             if value1_t != value2_t:
                 exit(53)
+
+        if (value1_t == 'string'):
+            value1 = self.__escape_sequences(value1)
+        if (value2_t == 'string'):
+            value2 = self.__escape_sequences(value2)
 
         self.__var_manager.insert_value(dest, value1 == value2, 'bool')
