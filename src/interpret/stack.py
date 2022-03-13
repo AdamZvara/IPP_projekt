@@ -27,3 +27,6 @@ class Stack:
     # push value and its type on stack
     def push(self, value, type='int'):
         self.__stack.append(Stack_item(value, type))
+
+    def is_empty(self):
+        return len(self.__stack) == 0

@@ -191,6 +191,8 @@ class Program:
             type = self.__var_manager.get_type(arg.value)
         if value == None:
             exit(56)
+        if (type == 'string'):
+            value = self.__escape_sequences(value)
         self.__stack.push(value, type)
 
     def pops(self, var : Argument) -> None:
@@ -214,9 +216,35 @@ class Program:
         if (value1 == value2):
             self.jump(target)
 
+    def __pre_comparison_stack(self):
+        value2 = self.__stack.pop()
+        value1 = self.__stack.pop()
+        if (value1.type != 'nil' and value2.type != 'nil'):
+            if (value1.type != value2.type):
+                exit(53)
+        if (value1.type == 'string'):
+            value1 = self.__escape_sequences(value1.value)
+        else:
+            value1 = value1.value
+        if (value2.type == 'string'):
+            value2 = self.__escape_sequences(value2.value)
+        else:
+            value2 = value2.value
+        return value1, value2
+
+    def jumpifeqs(self, target):
+        value1, value2 = self.__pre_comparison_stack()
+        if (value1 == value2):
+            self.jump(target)
+
     def jumpifneq(self, instruction):
         target, value1, value2 = instruction
         (value1,value2) = self.__set_args(value1, value2)
+        if (value1 != value2):
+            self.jump(target)
+
+    def jumpifneqs(self, target):
+        value1, value2 = self.__pre_comparison_stack()
         if (value1 != value2):
             self.jump(target)
 
@@ -330,6 +358,14 @@ class Program:
         except Exception:
             exit(58)
 
+    def int2chars(self):
+        val = self.__stack.pop()
+        val = self.__pre_conversion_stack(val, 'int')
+        try:
+            self.__stack.push(chr(val.value), 'string')
+        except Exception:
+            exit(58)
+
     def stri2int(self, dst, value, pos):
         val = self.__pre_conversion(value, 'string')
         pos = self.__pre_conversion(pos, 'int')
@@ -341,18 +377,22 @@ class Program:
             exit(58)
 
     def __pre_conversion_stack(self, value, desired_type):
-        if value == None:
+        if value.value == None:
             exit(56)
-        elif type(value) is not desired_type:
+        elif value.type != desired_type:
             exit(53)
         return value
 
     def stri2ints(self):
         val = self.__stack.pop()
         dest = self.__stack.pop()
-        val = self.__pre_conversion_stack(val.value, int)
+        val = self.__pre_conversion_stack(val, 'int')
+        if (dest.type != 'string'):
+            exit(53)
         try:
-            self.__stack.push(ord(dest.value[val]), 'int')
+            if (val.value < 0):
+                raise Exception
+            self.__stack.push(ord(dest.value[val.value]), 'int')
         except Exception:
             exit(58)
 
@@ -462,3 +502,53 @@ class Program:
         if value1_t == 'nil' or value2_t == 'nil' or value1_t != value2_t:
             exit(53)
         self.__var_manager.insert_value(dest, value1 < value2, 'bool')
+
+    # STACK VERSIONS
+    def __stack_values(self):
+        pass
+
+    def ands(self):
+        val2 = self.__stack.pop()
+        val1 = self.__stack.pop()
+        if (val2.type != 'bool' or val1.type != 'bool'):
+            exit(53)
+        self.__stack.push(val1.value and val2.value, 'bool')
+
+    def ors(self):
+        val2 = self.__stack.pop()
+        val1 = self.__stack.pop()
+        if (val2.type != 'bool' or val1.type != 'bool'):
+            exit(53)
+        self.__stack.push(val1.value or val2.value, 'bool')
+
+    def nots(self):
+        val = self.__stack.pop()
+        if (val.type != 'bool'):
+            exit(53)
+        self.__stack.push(not val.value, 'bool')
+
+    def eqs(self):
+        value2 = self.__stack.pop()
+        value1 = self.__stack.pop()
+        if value1.type != 'nil' and value2.type != 'nil':
+            if value1.type != value2.type:
+                exit(53)
+        self.__stack.push(value1.value == value2.value, 'bool')
+
+    def gts(self):
+        value2 = self.__stack.pop()
+        value1 = self.__stack.pop()
+        if value1.type == 'nil' and value2.type == 'nil' or value1.type != value2.type :
+            exit(53)
+        self.__stack.push(value1.value > value2.value, 'bool')
+
+    def lts(self):
+        value2 = self.__stack.pop()
+        value1 = self.__stack.pop()
+        if value1.type == 'nil' and value2.type == 'nil' or value1.type != value2.type :
+            exit(53)
+        self.__stack.push(value1.value < value2.value, 'bool')
+
+    def clears(self):
+        while self.__stack.is_empty() != True:
+            self.__stack.pop()

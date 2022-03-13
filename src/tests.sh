@@ -125,7 +125,7 @@ function both_test()
 
             php8.1 parser/parse.php < $src > xml
             if [ -f $input ]; then
-                python3 interpret/interpret.py --source='xml' --input=$input > tmp 2>/dev/null
+                python3 interpret/interpret.py --source='xml' < $input > tmp 2>/dev/null
             else
                 python3 interpret/interpret.py --source='xml' > tmp
             fi
@@ -224,6 +224,8 @@ function parser_bonus()
 if [ -z $1 ]; then
     parser_test
     interpret_test
+    both_test
+    parser_bonus
 elif [ $1 == 'parser' ]; then
     parser_test
 elif [ $1 == 'interpret' ]; then

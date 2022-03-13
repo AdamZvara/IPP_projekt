@@ -96,6 +96,26 @@ while instruction := program.get_instruction():
         program.gt(instruction[0], instruction[1], instruction[2])
     elif (opcode == 'LT'):
         program.lt(instruction[0], instruction[1], instruction[2])
+    elif (opcode == 'ANDS'):
+        program.ands()
+    elif (opcode == 'ORS'):
+        program.ors()
+    elif (opcode == 'NOTS'):
+        program.nots()
+    elif (opcode == 'EQS'):
+        program.eqs()
+    elif (opcode == 'GTS'):
+        program.gts()
+    elif (opcode == 'LTS'):
+        program.lts()
+    elif (opcode == 'INT2CHARS'):
+        program.int2chars()
+    elif (opcode == 'JUMPIFEQS'):
+        program.jumpifeqs(instruction[0])
+    elif (opcode == 'JUMPIFNEQS'):
+        program.jumpifneqs(instruction[0])
+    elif (opcode == 'CLEARS'):
+        program.clears()
     elif (opcode == 'LABEL'):
         pass
     else:
