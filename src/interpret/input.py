@@ -44,7 +44,10 @@ class Input:
                 return input()
             except EOFError:
                 return None
-        line = self.__input.readline().rstrip('\n') # get line and remove trailing newline
+        line = self.__input.readline() # get line and remove trailing newline
+        if (line == ''):
+            return None
+        line = line.rstrip('\n')
         return line
 
     # get source filename
