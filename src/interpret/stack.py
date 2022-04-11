@@ -1,4 +1,3 @@
-
 # stack item containing value and type property
 class Stack_item:
     def __init__(self, value, type):

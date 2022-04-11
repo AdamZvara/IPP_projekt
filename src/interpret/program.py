@@ -1,53 +1,62 @@
-from instruction import Instruction
-from argument import Argument
+from instruction import Instruction, Argument
 from variable_manager import Variable_manager
-from label import Label
-from stack import Stack, Stack_item
-from re import search, sub
+from stack import Stack
+from re import search
 
-# Class used for interpreting program
-# Contains instruction objects stored in list and keeps position of currently
-#   interpreted variable in internal counter instructions_pos
+class Label:
+    """Label class containing name and position in instruction list"""
+    def __init__(self, name : str, pos : int):
+        self.__name = name
+        self.__pos = pos
+
+    @property
+    def name(self):
+        return self.__name
+
+    @property
+    def pos(self):
+        return self.__pos
+
+
 class Program:
+    """
+    Class for interpreting program which contains instruction objects stored in instructions list
+    and keeps position of currently interpreted instruction in internal counter instructions_pos
+    """
     __instructions = list()
     __instructions_pos = 0
     __call_stack = list()
     __stack = Stack()
     __var_manager = Variable_manager()
     __types = ['int', 'bool', 'nil', 'string', 'float']
-    __arithmetic = ['ADD', 'SUB', 'IDIV', 'MUL', 'DIV', 'ADDS', 'SUBS', 'IDIVS', 'MULS']
 
-    # Get next interpreted instruction but do not change instruction_pos
-    # If there are no more instructions return None
-    def get_instruction(self) -> Instruction:
+    def get_instruction(self):
+        """Return next instruction to be interpreted or None if there are no more instructions"""
         if self.__instructions_pos < len(self.__instructions):
             return self.__instructions[self.__instructions_pos]
         else:
             return None
 
-    # Increate instructions_pos counter to interpret following instruction
-    def next_instr(self) -> None:
+    def next_instr(self):
+        """Increment instruction counter"""
         self.__instructions_pos += 1
 
-    # Add instruction object to internal instruction list
-    # check if instruction order was not used already
-    def add_instruction(self, instr : Instruction) -> None:
+    def add_instruction(self, instr : Instruction):
+        """Add instruction object to instruction list"""
         for i in self.__instructions:
             if i.order == instr.order:
                 exit(32)
         self.__instructions.append(instr)
 
-    # sort instructions by order and sort arguments for each instruction
-    # check if each instruction has arguments in correct format
-        # e.g starting <arg2> is wrong, 1st argument should be <arg1>
     def sort(self):
+        """Sort instructions by order and sort arguments for each instruction"""
         self.__instructions.sort(key=lambda x: x.order)
         for instruction in self.__instructions:
             instruction.sort()
             instruction.arg_valid()
 
-    # Iterate thourgh instructions and set labels
     def create_labels(self):
+        """Iterate thourgh instructions and create label objects"""
         self.__labels = list()
         for pos, instruction in enumerate(self.__instructions):
             if instruction.opcode == 'LABEL':
@@ -56,16 +65,12 @@ class Program:
                     exit(52)
                 self.__labels.append(Label(name, pos))
 
-    # Find and return label with given name, otherwise return None
-    def label_find(self, name : str) -> Label:
+    def label_find(self, name : str):
+        """Return label with given name or None if it does not exist"""
         for l in self.__labels:
             if l.name == name:
                 return l
         return None
-
-    @property
-    def arithmetics(self):
-        return self.__arithmetic
 
     # INSTRUCTION METHODS
 
@@ -76,7 +81,7 @@ class Program:
         arg, arg_t = self.__literal_or_variable(arg)
         self.__var_manager.insert_value(src, arg, arg_t)
 
-    # FRAMES
+    # FRAMES MANIPULATION
 
     def createframe(self):
         self.__var_manager.TF_create()
@@ -117,8 +122,7 @@ class Program:
             string = string[:escape[0]] + escaped + string[escape[1]:]
         return string
 
-    def print(self, arg):
-        # TODO special characters &gt, &lt ...
+    def write(self, arg):
         if (arg.type == 'var'):
             (result,type) = self.__var_manager.print(arg)
             if (type == 'string'):
@@ -139,13 +143,11 @@ class Program:
                 result = arg.value
         print(result, end='')
 
-    def readcheck(self, var, type):
+    def read(self, var, type, user_input):
         # check if variable exists
         self.__var_manager.get_value(var.value)
         if type.value not in ['int', 'string', 'bool', 'float']:
             exit(53)
-
-    def read(self, var, type, user_input):
         try:
             if (user_input == None):
                 raise Exception
@@ -174,7 +176,7 @@ class Program:
         self.__call_stack.append(self.__instructions_pos)
         self.jump(label)
 
-    def return_function(self):
+    def returnfunction(self):
         if (len(self.__call_stack) > 0):
             self.__instructions_pos = self.__call_stack.pop()
         else:
@@ -483,7 +485,6 @@ class Program:
             value2 = self.__escape_sequences(value2)
         return value1, value1_t, value2, value2_t
 
-
     def eq(self, dest, value1, value2):
         value1, value1_t, value2, value2_t = self.__pre_comparison(value1, value2)
         if value1_t != 'nil' and value2_t != 'nil':
@@ -503,9 +504,7 @@ class Program:
             exit(53)
         self.__var_manager.insert_value(dest, value1 < value2, 'bool')
 
-    # STACK VERSIONS
-    def __stack_values(self):
-        pass
+    # STACK BONUS
 
     def ands(self):
         val2 = self.__stack.pop()
