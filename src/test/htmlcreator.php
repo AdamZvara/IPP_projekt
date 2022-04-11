@@ -136,7 +136,7 @@ class HTMLCreator
     // Save HTML file
     function end()
     {
-        $this->dom->saveHTMLFile($this->pageName);
+        echo $this->dom->saveHTML();
     }
 
 }
