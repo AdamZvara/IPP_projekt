@@ -9,6 +9,7 @@ class HTMLCreator
     private $summaryStyle = 'background-color:lightgray; padding: 5px 10px; text-align: center;';
     private $directoryStyle = 'border-style: dashed;border-color:black; border-radius: 25px; padding-left: 10px; margin-top: 10px;';
     private $singleTestSyle = 'line-height: 0%; margin-left: 3%;';
+    private $pageName = 'result.html';
 
     // Main HTML structure
     function start()
@@ -135,7 +136,7 @@ class HTMLCreator
     // Save HTML file
     function end()
     {
-        $this->dom->saveHTMLFile("index.html");
+        $this->dom->saveHTMLFile($this->pageName);
     }
 
 }

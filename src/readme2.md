@@ -2,6 +2,8 @@
 **Meno a priezvisko**: Adam Zvara
 **Login**: xzvara01
 
+## interpret.py
+
 ## test.php
 Skript **test.php** je rozdelený do niekoľkých logických častí.
 Prvou časťou je trieda **Context**, ktorá zabezpečuje spracovanie parametrov získaných pri spustení skriptu. Parametre sú spracované pomocou funkcie *getopt* a následne je skontrolovaná ich integrita v konštruktore samotnej triedy (existencia súborov/adresárov, konflikty parametrov).
