@@ -1,8 +1,7 @@
 <?php
-#context class containing info about file locations, noclean, recursive options etc
-
 include "error_codes.php";
 
+// Class containing options passed to script
 class Context
 {
     private $help_message = "USAGE: php test.php [OPT]" . PHP_EOL .
@@ -30,6 +29,7 @@ class Context
         "noclean"
         );
 
+    // implicit values of options
     public $recursive = false;
     public $clean = true;
     public $parse_only = false;
@@ -39,59 +39,75 @@ class Context
     public $directory = null;
     public $jexampath = "/pub/courses/ipp/jexamxml/";
 
+    // Constructor parsing arguments with getopt and checking integrity of data
     function __construct($argc)
     {
-        $this->directory = dirname(__FILE__);
+        $this->directory = dirname(__FILE__); // implicit value of directory
         $options = getopt("", $this->longopt);
 
+        // set option variables
         foreach ($options as $key => $value) {
-            if ($key == "help") {
-                if ($argc > 2)
-                    exit(E_WRONGARG);
-                echo $this->help_message . PHP_EOL;
-                exit(0);
-            } elseif ($key == "recursive") {
-                $this->recursive = true;
-            } elseif ($key == "noclean") {
-                $this->clean = false;
-            } elseif ($key == "parse-only") {
-                if (key_exists("int-only", $options) || key_exists("int-script", $options))
-                    exit(E_WRONGARG);
-                $this->parse_only = true;
-            } elseif ($key == "int-only") {
-                if (key_exists("parse-only", $options) || key_exists("parse-script", $options))
-                    exit(E_WRONGARG);
-                $this->int_only = true;
-            } elseif ($key == "directory") {
-                if (!is_readable($value)) {
-                    exit(E_NOFILE);
-                } else {
-                    $this->directory = $value;
-                }
-            } elseif ($key == "parse-script") {
-                if (!is_readable($value)) {
-                    exit(E_NOFILE);
-                } else {
-                    $this->parse_script = $value;
-                }
-            } elseif ($key == "int-script") {
-                if (!is_readable($value)) {
-                    exit(E_NOFILE);
-                } else {
-                    $this->int_script = $value;
-                }
-            } elseif ($key == "jexampath") {
-                if (!is_readable($value)) {
-                    exit(E_NOFILE);
-                } else {
-                    if (!str_ends_with($value, '/'))
-                    $value = $value . '/';
-                $this->jexampath = $value;
-                }
-            }
-        }
-    }
+            switch ($key) {
+                case 'help':
+                    if ($argc > 2)
+                        exit(E_WRONGARG);
+                    echo $this->help_message . PHP_EOL;
+                    exit(0);
+                    break;
 
-}
+                case 'recursive':
+                    $this->recursive = true;
+                    break;
+
+                case 'noclean':
+                    $this->clean = false;
+                    break;
+
+                case 'parse-only':
+                    if (key_exists("int-only", $options) || key_exists("int-script", $options))
+                        exit(E_WRONGARG);
+                    $this->parse_only = true;
+                    break;
+
+                case 'int-only':
+                    if (key_exists("parse-only", $options) || key_exists("parse-script", $options))
+                        exit(E_WRONGARG);
+                    $this->int_only = true;
+                    break;
+
+                case 'directory':
+                    if (!is_readable($value))
+                        exit(E_NOFILE);
+                    $this->directory = $value;
+                    break;
+
+                case 'parse-script':
+                    if (!is_readable($value))
+                        exit(E_NOFILE);
+                    $this->parse_script = $value;
+                    break;
+
+                case 'int-script':
+                    if (!is_readable($value))
+                        exit(E_NOFILE);
+                    $this->int_script = $value;
+                    break;
+
+                case 'jexampath':
+                    if (!is_readable($value))
+                        exit(E_NOFILE);
+                    //append '/' to path if does not exist
+                    if (!str_ends_with($value, '/'))
+                        $value = $value . '/';
+                    $this->jexampath = $value;
+                    break;
+
+                default:
+                    exit(E_WRONGARG);
+                    break;
+            } // switch
+        } // foreach
+    } // constructor
+} // class
 
 ?>
