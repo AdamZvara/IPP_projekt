@@ -4,7 +4,8 @@ include "testmodules.php";
 include "htmlcreator.php";
 
 // Class to search for testing files based on given directory and recursive option
-class DirectorySearch {
+class DirectorySearch
+{
     private $_iterator;
 
     // Create recursive iterator to traverse thourgh directories
@@ -39,7 +40,8 @@ class DirectorySearch {
 }
 
 // Find (or create) files used for testing (in, rc, out)
-function check_files($source) {
+function check_files($source)
+{
     $basePathName = substr($source, 0, -4);
 
     # rc file check
@@ -58,6 +60,7 @@ function check_files($source) {
         file_put_contents($pathname, '');
 }
 
+// Add key value to array
 function add_to_array($fileName, $directoryName, &$array)
 {
     if (array_key_exists($directoryName, $array)) {
@@ -67,15 +70,18 @@ function add_to_array($fileName, $directoryName, &$array)
     }
 }
 
-$context = new Context($argc);
+$context   = new Context($argc);
 $dirsearch = new DirectorySearch($context->directory, $context->recursive);
 
-$parseTester = new ParseTester($context->parse_script, $context->jexampath, $context->clean);
-$interpretTester = new InterpretTester($context->int_script, $context->clean);
-$multiTester = new MultiTester($context->parse_script, $context->int_script, $context->jexampath, $context->clean);
+Tester::set_options($context->parse_script, $context->int_script, $context->jexampath, $context->clean);
+$parseTester     = new ParseTester();
+$interpretTester = new InterpretTester();
+$multiTester     = new MultiTester();
 
+// 2D arrays
 $testsPassed = array();
 $testsFailed = array();
+// 1D array
 $allTests = array();
 
 // Actual testing
@@ -105,16 +111,17 @@ while ($file = $dirsearch->get_file()) {
     }
 }
 
-# count elements recursively and subtract the first layer (keys only)
+// count elements recursively and subtract the first layer (keys only)
 $passedCount = count($testsPassed, COUNT_RECURSIVE) - count($testsPassed);
 $failedCount = count($testsFailed, COUNT_RECURSIVE) - count($testsFailed);
 
+// sort directories by name
 ksort($allTests);
 
+// HTML generation
 $html = new HTMLCreator();
 $html->start();
 $html->summary($passedCount, $failedCount);
 $html->content($testsPassed, $testsFailed, $allTests);
 $html->end();
-
 ?>

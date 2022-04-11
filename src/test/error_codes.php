@@ -1,10 +1,4 @@
 <?php
-/**
- * @brief   Error return values for test.php
- * @date    25.3.2022
- * @author  xzvara01, xzvara01@stud.fit.vutbr.cz
- */
-
 if (!defined('E_WRONGARG')) define('E_WRONGARG', 10);
 if (!defined('E_INFILE'))   define('E_INFILE',   11);
 if (!defined('E_OUTFILE'))  define('E_OUTFILE',  12);

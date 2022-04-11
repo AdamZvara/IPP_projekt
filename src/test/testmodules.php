@@ -1,16 +1,36 @@
 <?php
 
-interface ITestable {
-    function test($filename);
-}
-
-abstract class Tester implements ITestable{
-    //abstract protected function process_file($srcfile, $tmpfile, $infile);
-    abstract protected function compare_results($outfile, $tmpFile);
-
-    static protected $_clean;
+// Class encapsulating SingleTester and MultiTester
+abstract class Tester
+{
+    static protected $clean;
     static protected $python = "python3";
     static protected $php = "php8.1";
+    static protected $parse_script;
+    static protected $int_script;
+    static protected $jexampath;
+
+    // Set paths to scripts and clean option
+    static function set_options($parse_script, $int_script, $jexampath, $clean)
+    {
+        self::$parse_script = $parse_script;
+        self::$int_script = $int_script;
+        self::$jexampath = $jexampath;
+        self::$clean = $clean;
+    }
+
+    // Run single test
+    abstract function test($filename);
+}
+
+// Class providing test method for ParseTester and InterpretTester
+abstract class SingleTester extends Tester
+{
+    // Execute script for parser or interpret
+    abstract protected function process_file($srcfile, $tmpfile, $infile);
+
+    // Compare results using diff or jexamxml
+    abstract protected function compare_results($outfile, $tmpFile);
 
     function test($filename)
     {
@@ -40,7 +60,7 @@ abstract class Tester implements ITestable{
             }
         }
 
-        if (self::$_clean == true) {
+        if (parent::$clean == true) {
             unlink($tmpfile);
         }
 
@@ -48,22 +68,13 @@ abstract class Tester implements ITestable{
     }
 }
 
-class ParseTester extends Tester {
-    private $parse_script;
-    private $jexampath;
-
-    function __construct($parse_script, $jexampath, $clean)
-    {
-        $this->parse_script = $parse_script;
-        $this->jexampath = $jexampath;
-        parent::$_clean = $clean;
-    }
-
+class ParseTester extends SingleTester
+{
     function process_file($srcfile, $tmpfile, $infile)
     {
         $result = null;
         $output = null;
-        exec(parent::$php . ' '.$this->parse_script.' > '. $tmpfile.' < '.$srcfile, $output, $result);
+        exec(parent::$php . ' '.parent::$parse_script.' > '. $tmpfile.' < '.$srcfile, $output, $result);
         return $result;
     }
 
@@ -71,7 +82,7 @@ class ParseTester extends Tester {
     {
         $result = null;
         $output = null;
-        exec('java -jar '.$this->jexampath.'jexamxml.jar'.' '.$tmpFile.' '.$outfile.' '.$this->jexampath.'options',
+        exec('java -jar '.parent::$jexampath.'jexamxml.jar'.' '.$tmpFile.' '.$outfile.' '.parent::$jexampath.'options',
             $output,
             $result
         );
@@ -79,20 +90,13 @@ class ParseTester extends Tester {
     }
 }
 
-class InterpretTester extends Tester {
-    private $int_script;
-
-    function __construct($int_script, $clean)
-    {
-        $this->int_script = $int_script;
-        parent::$_clean = $clean;
-    }
-
+class InterpretTester extends SingleTester
+{
     function process_file($srcfile, $tmpfile, $infile)
     {
         $result = null;
         $output = null;
-        exec(parent::$python . ' '.$this->int_script.' --source='.$srcfile.' --input='.$infile.' > '.$tmpfile . ' 2> /dev/null',
+        exec(parent::$python . ' '.parent::$int_script.' --source='.$srcfile.' --input='.$infile.' > '.$tmpfile . ' 2> /dev/null',
             $output,
             $result
         );
@@ -108,38 +112,30 @@ class InterpretTester extends Tester {
     }
 }
 
+// Class to test parser and interpret combined
 class MultiTester extends Tester
 {
-    private $int_script;
-    private $parse_script;
-    private $jexampath;
-
-    function __construct($parse_script, $int_script, $jexampath, $clean)
-    {
-        $this->parse_script = $parse_script;
-        $this->int_script = $int_script;
-        $this->jexampath = $jexampath;
-        parent::$_clean = $clean;
-    }
-
+    // Parse file using parser script
     function parse_file($srcfile, $tmpfile, $infile)
     {
         $result = null;
         $output = null;
-        exec(parent::$php . ' '.$this->parse_script.' > '. $tmpfile.' < '.$srcfile, $output, $result);
+        exec(parent::$php . ' '.parent::$parse_script.' > '. $tmpfile.' < '.$srcfile, $output, $result);
         return $result;
     }
 
+    // Interpret file produced by parse_file function
     function interpret_file($srcfile, $tmpfile, $infile) {
         $result = null;
         $output = null;
-        exec(parent::$python . ' '.$this->int_script.' --source='.$srcfile.' --input='.$infile.' > '.$tmpfile . ' 2> /dev/null',
+        exec(parent::$python . ' '.parent::$int_script.' --source='.$srcfile.' --input='.$infile.' > '.$tmpfile . ' 2> /dev/null',
             $output,
             $result
         );
         return $result;
     }
 
+    // Compare results using diff
     function compare_results($outfile, $tmpFile)
     {
         $result = null;
@@ -148,6 +144,7 @@ class MultiTester extends Tester
         return $result;
     }
 
+    // Test implementation for consecutive parser and interpret tests
     function test($filename)
     {
         $fileBaseName = substr($filename, 0, -4);
@@ -155,44 +152,54 @@ class MultiTester extends Tester
         $rcFile  = $fileBaseName . '.rc';
         $srcfile = $fileBaseName . '.src' ;
         $infile  = $fileBaseName . '.in';
-        $tmpfile = $fileBaseName . '.tmp';
+        $intfile = $fileBaseName . '.int';
         $outfile = $fileBaseName . '.out';
-        $interpretFile = $fileBaseName . '.int';
+        $parsefile = $fileBaseName . '.parse';
 
         $rc_expected = file_get_contents($rcFile);
-        $rc_actual = $this->parse_file($srcfile, $interpretFile, $infile);
 
-        // PARSER CHECKING
+        // parsing file ...
+        $rc_actual = $this->parse_file($srcfile, $parsefile, $infile);
+
         if ($rc_actual != 0) {
+            // parsing failed
             if ($rc_expected == $rc_actual) {
+                // return codes match, it was supposed to fail!
                 $retval = true;
             } else {
+                // return codes do not match, oh well ...
                 $retval = false;
             }
         } else {
-            $rc = $this->interpret_file($interpretFile, $tmpfile, $infile);
+            // parser return code was okay, go ahead and interpret file
+            $rc = $this->interpret_file($parsefile, $intfile, $infile);
             if ($rc != $rc_expected) {
+                // this is the final return code so if it is not equal to expected test failed
                 $retval = false;
             } else {
                 if ($rc == 0) {
-                    if ($this->compare_results($outfile, $tmpfile) == 0) {
+                    // interpret return code was okay, need to compare results of interpretation!
+                    if ($this->compare_results($outfile, $intfile) == 0) {
                         $retval = true;
                     } else {
                         $retval = false;
                     }
                 } else {
+                    // interpret return code was not okay, check if it is equal to expected return code
                     if ($rc != $rc_expected) {
+                        // it is not :(
                         $retval = false;
                     } else {
+                        // it is, at last the test passed
                         $retval = true;
                     }
                 }
             }
         }
 
-        if (self::$_clean == true) {
-            unlink($tmpfile);
-            unlink($interpretFile);
+        if (parent::$clean == true) {
+            unlink($intfile);
+            unlink($parsefile);
         }
 
         return $retval;
