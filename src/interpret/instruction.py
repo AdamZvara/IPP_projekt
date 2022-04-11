@@ -33,20 +33,20 @@ class Argument:
 
     def __to_bool__(self, value):
         """Return argument value as boolean"""
-        if (value == 'true'):
+        if value == 'true':
             return True
         else:
             return False
 
     def __eq__(self, other):
         """Compare arguments"""
-        if (self.type != 'nil' and other.type != 'nil'):
-            if (self.type == other.type and self.value == other.value):
+        if self.type != 'nil' and other.type != 'nil':
+            if self.type == other.type and self.value == other.value:
                 return True
             else:
                 return False
         else:
-            if (self.type == 'nil' and other.type == 'nil'):
+            if self.type == 'nil' and other.type == 'nil':
                 return True
             else:
                 return False
@@ -108,10 +108,10 @@ class Instruction:
                 if self.__arg_count != opcodes[1]:
                     exit(32)
 
-    def arg_valid(self) -> None:
+    def arg_valid(self):
         """Validate that sorted arguments begin from number 1 up to arg_count - 1"""
         for i in range(self.__arg_count):
-            if (self.__args[i].order != i+1):
+            if self.__args[i].order != i+1:
                 exit(32)
 
     @classmethod
