@@ -1,5 +1,10 @@
+"""
+Author  : Adam Zvara, xzvara01@stud.fit.vutbr.cz
+Date    : 12.4.2022
+Brief   : Classes used for variable manipulation in interpret
+"""
+
 from instruction import Argument
-from sys import stderr
 
 class Variable():
     """Class representing variable containing frame, name, value and type"""
@@ -112,15 +117,6 @@ class Variable_manager():
                 exit(56)
             result = var.value
         return result, var.type
-
-    def dprint(self, arg : Argument) -> None:
-        """Print value of variable to stderr"""
-        if arg.type == 'var':
-            if not (var := self.find(arg.value)):
-                exit(54)
-            print(var.value, end='', file=stderr)
-        else:
-            print(arg.value, end='', file=stderr)
 
     def TF_create(self):
         """Empty temporary frame if it exists and create new one"""

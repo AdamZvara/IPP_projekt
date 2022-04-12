@@ -1,4 +1,10 @@
 <?php
+/**
+ * @brief   Class used for parsing command line options
+ * @date    12.4.2022
+ * @author  xzvara01, xzvara01@stud.fit.vutbr.cz
+ */
+
 include "error_codes.php";
 
 // Class containing options passed to script

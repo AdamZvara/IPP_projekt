@@ -1,3 +1,9 @@
+"""
+Author  : Adam Zvara, xzvara01@stud.fit.vutbr.cz
+Date    : 12.4.2022
+Brief   : Main interpreter file
+"""
+
 from program import Program, Instruction
 from argparse import ArgumentParser
 from instruction import Instruction
@@ -108,19 +114,16 @@ program.create_labels()
 while instruction := program.get_instruction():
     opcode = instruction.opcode
 
-    # since instruction arguments can be accessed with [] operator, passing *instruction to function passes all arguments
+    # instruction arguments can be accessed with [] operator, passing *instruction expands argument list
 
     # instructions with same function name as instruction name that take multiple arguments
-    if opcode in ['DEFVAR', 'WRITE', 'MOVE', 'JUMP', 'DPRINT', 'EXIT', 'TYPE', 'CALL', 'PUSHS', 'POPS', 'FLOAT2INT', 'INT2FLOAT', 'INT2CHAR', 'STRI2INT', 'CONCAT', 'STRLEN', 'GETCHAR', 'SETCHAR', 'EQ', 'GT', 'LT', 'JUMPIFEQS', 'JUMPIFNEQS']:
+    if opcode in ['DEFVAR', 'WRITE', 'MOVE', 'JUMP', 'DPRINT', 'EXIT', 'TYPE', 'CALL', 'PUSHS', 'POPS', 'FLOAT2INT', 'INT2FLOAT',
+    'INT2CHAR', 'STRI2INT', 'CONCAT', 'STRLEN', 'GETCHAR', 'SETCHAR', 'EQ', 'GT', 'LT', 'JUMPIFEQS', 'JUMPIFNEQS', 'JUMPIFEQ', 'JUMPIFNEQ']:
         getattr(program, opcode.lower())(*instruction)
 
     # instructions with same function name as instruction name + "function" that take multiple arguments
     elif opcode in ['AND', 'OR', 'NOT', 'RETURN']:
         getattr(program, opcode.lower() + 'function')(*instruction)
-
-    # instructions with same function name as instruction name that take single argument
-    elif opcode in ['JUMPIFEQ', 'JUMPIFNEQ']:
-        getattr(program, opcode.lower())(instruction)
 
     # instructions with same function name as instruction name that take no arguments
     elif opcode in ['CREATEFRAME', 'PUSHFRAME', 'POPFRAME', 'STRI2INTS', 'ANDS', 'ORS', 'NOTS', 'EQS', 'GTS', 'LTS', 'INT2CHARS', 'CLEARS']:

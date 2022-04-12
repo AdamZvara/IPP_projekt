@@ -1,4 +1,10 @@
 <?php
+/**
+* @brief   Main testing script
+* @date    12.4.2022
+* @author  xzvara01, xzvara01@stud.fit.vutbr.cz
+*/
+
 include "context.php";
 include "testmodules.php";
 include "htmlcreator.php";

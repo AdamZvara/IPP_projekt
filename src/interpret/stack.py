@@ -1,5 +1,11 @@
-# stack item containing value and type property
+"""
+Author  : Adam Zvara, xzvara01@stud.fit.vutbr.cz
+Date    : 12.4.2022
+Brief   : Stack used for storing constants
+"""
+
 class Stack_item:
+    """Stack item containing value and type"""
     def __init__(self, value, type):
         self.__value = value
         self.__type = type
@@ -12,18 +18,16 @@ class Stack_item:
     def type(self):
         return self.__type
 
-# stack for stack instructions
 class Stack:
+    """Class used for for stack instructions"""
     def __init__(self):
         self.__stack = list()
 
-    # pop stack item from stack
     def pop(self):
         if len(self.__stack) == 0:
             exit(56)
         return self.__stack.pop()
 
-    # push value and its type on stack
     def push(self, value, type='int'):
         self.__stack.append(Stack_item(value, type))
 

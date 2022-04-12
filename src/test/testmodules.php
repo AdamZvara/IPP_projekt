@@ -1,4 +1,9 @@
 <?php
+/**
+ * @brief   Testing modules
+ * @date    12.4.2022
+ * @author  xzvara01, xzvara01@stud.fit.vutbr.cz
+ */
 
 // Class encapsulating SingleTester and MultiTester
 abstract class Tester

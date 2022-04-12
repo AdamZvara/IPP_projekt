@@ -1,3 +1,9 @@
+"""
+Author  : Adam Zvara, xzvara01@stud.fit.vutbr.cz
+Date    : 12.4.2022
+Brief   : Instruction class containing arguments
+"""
+
 class Argument:
     """Argument class containing argument type, value and order"""
 
@@ -68,7 +74,7 @@ class Instruction:
     def __init__(self, opcode : str, order : str):
         try:
             order = int(order)
-            if (order < 1):
+            if order < 1:
                 exit(32)
         except ValueError:
             exit(32)

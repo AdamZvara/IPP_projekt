@@ -1,6 +1,10 @@
 <?php
+/**
+ * @brief   Class used to encapsulate generating HTML output
+ * @date    12.4.2022
+ * @author  xzvara01, xzvara01@stud.fit.vutbr.cz
+ */
 
-// Class to encapsulate generating HTML output
 class HTMLCreator
 {
     private $dom;
